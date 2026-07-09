@@ -1,4 +1,4 @@
 {
   "files": [],
-  "references": [{ "path": "db" }, { "path": "packages/shared" }]
+  "references": [{ "path": "db" }, { "path": "packages/shared" }, { "path": "packages/parsers" }]
 }

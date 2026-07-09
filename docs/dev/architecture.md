@@ -44,3 +44,16 @@ additions are additive, not migrations against live data:
 Custom email magic-link, delivered via Resend. This is a real (not stubbed)
 flow — see chunk 3 — but multi-user-per-club access (a `club_members` join
 table) is a Phase 1+ concern; Phase 0 assumes a single owner per club.
+
+## Parser package browser-bundling
+
+`packages/parsers` has to run client-side, which ruled out `iconv-lite`
+for the Windows-1252 fallback despite being the original plan — it depends
+on Node's `Buffer`, which Next 15+ no longer auto-polyfills for the client
+bundle. Node's/the browser's built-in `TextDecoder` supports
+`windows-1252` natively (verified), so encoding detection uses that
+instead with zero extra dependency. `papaparse` (CSV tokenization) is
+browser-first by design, so no similar concern there. `apps/web/lib/blob.ts`
+(Vercel Blob wrapper) is written and ready but unused until chunk 5 wires
+up the actual upload route — `BLOB_READ_WRITE_TOKEN` isn't required until
+then.

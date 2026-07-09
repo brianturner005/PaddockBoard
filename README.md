@@ -17,9 +17,9 @@ Phase 1+ seams as they're written.
 Progress:
 
 - [x] Chunk 1 — repo scaffold & tooling
-- [ ] Chunk 2 — Neon + Drizzle schema
-- [ ] Chunk 3 — club/season/class/event/session creation
-- [ ] Chunk 4 — Orbits CSV parser package
+- [x] Chunk 2 — Neon + Drizzle schema
+- [x] Chunk 3 — club/season/class/event/session creation (auth + admin UI)
+- [x] Chunk 4 — Orbits CSV parser package
 - [ ] Chunk 5 — upload + client-side parse + preview UI
 - [ ] Chunk 6 — commit rows + publish flow
 - [ ] Chunk 7 — public results page
@@ -45,8 +45,8 @@ Azure-based one originally sketched.
 ```
 apps/web/          Next.js app — UI + API route handlers
 packages/shared/    Shared TS types & Zod schemas
-packages/parsers/   Timing-file parsers (Orbits CSV, etc.) — coming in chunk 4
-db/                 Drizzle schema, migrations, seed scripts — coming in chunk 2
+packages/parsers/   Timing-file parsers (Orbits CSV, etc.) — @paddockboard/parsers
+db/                 Drizzle schema, migrations, seed scripts (@paddockboard/db)
 fixtures/           Sample/synthetic timing files for parser tests
 docs/               GitHub Pages landing page (docs/index.html) + internal dev docs (docs/dev/)
 ```
@@ -63,6 +63,49 @@ npm run typecheck
 npm run test
 npm run build
 ```
+
+### Database
+
+Needs a `DATABASE_URL` (a Neon connection string) in both `.env` (repo root,
+used by `drizzle-kit` and `db/migrate.ts`) and `apps/web/.env.local` (used by
+the Next.js app at runtime) — see `.env.example` in each location. Neither
+file is committed.
+
+```bash
+npm run db:generate   # generate a migration from db/schema.ts
+npm run db:migrate    # apply pending migrations to DATABASE_URL
+```
+
+### Auth
+
+Club admin sign-in is a real email magic-link flow (not stubbed), so
+`apps/web/.env.local` also needs:
+
+- `AUTH_SECRET` — random signing secret for the magic-link and session
+  JWTs. Generate with
+  `node -e "console.log(require('crypto').randomBytes(32).toString('base64url'))"`.
+- `RESEND_API_KEY` — from [resend.com](https://resend.com), required to
+  actually send the sign-in email.
+- `EMAIL_FROM` — sender address; `onboarding@resend.dev` works until a
+  custom domain is verified in Resend.
+- `APP_URL` — base URL used to build the callback link in the email
+  (`http://localhost:3000` locally).
+
+See `apps/web/.env.example`.
+
+### File storage
+
+Session file uploads (chunk 5 onward) need `BLOB_READ_WRITE_TOKEN` in
+`apps/web/.env.local`, from a Vercel project's Storage → Blob tab. Not
+required yet for anything currently wired up.
+
+## Parser research
+
+`docs/dev/formats.md` documents what's actually known about MyLaps Orbits'
+CSV export format (sourced from MYLAPS/partner docs) versus what's
+assumed. No real export file has been obtained yet, so
+`fixtures/orbits/csv/` are synthetic — see that folder's README for the
+provenance of each fixture and what to do when a real one shows up.
 
 ## Demo
 
