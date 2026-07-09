@@ -18,7 +18,7 @@ Progress:
 
 - [x] Chunk 1 — repo scaffold & tooling
 - [x] Chunk 2 — Neon + Drizzle schema
-- [ ] Chunk 3 — club/season/class/event/session creation
+- [x] Chunk 3 — club/season/class/event/session creation (auth + admin UI)
 - [ ] Chunk 4 — Orbits CSV parser package
 - [ ] Chunk 5 — upload + client-side parse + preview UI
 - [ ] Chunk 6 — commit rows + publish flow
@@ -75,6 +75,23 @@ file is committed.
 npm run db:generate   # generate a migration from db/schema.ts
 npm run db:migrate    # apply pending migrations to DATABASE_URL
 ```
+
+### Auth
+
+Club admin sign-in is a real email magic-link flow (not stubbed), so
+`apps/web/.env.local` also needs:
+
+- `AUTH_SECRET` — random signing secret for the magic-link and session
+  JWTs. Generate with
+  `node -e "console.log(require('crypto').randomBytes(32).toString('base64url'))"`.
+- `RESEND_API_KEY` — from [resend.com](https://resend.com), required to
+  actually send the sign-in email.
+- `EMAIL_FROM` — sender address; `onboarding@resend.dev` works until a
+  custom domain is verified in Resend.
+- `APP_URL` — base URL used to build the callback link in the email
+  (`http://localhost:3000` locally).
+
+See `apps/web/.env.example`.
 
 ## Demo
 
