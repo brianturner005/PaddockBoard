@@ -19,7 +19,7 @@ Progress:
 - [x] Chunk 1 — repo scaffold & tooling
 - [x] Chunk 2 — Neon + Drizzle schema
 - [x] Chunk 3 — club/season/class/event/session creation (auth + admin UI)
-- [ ] Chunk 4 — Orbits CSV parser package
+- [x] Chunk 4 — Orbits CSV parser package
 - [ ] Chunk 5 — upload + client-side parse + preview UI
 - [ ] Chunk 6 — commit rows + publish flow
 - [ ] Chunk 7 — public results page
@@ -45,7 +45,7 @@ Azure-based one originally sketched.
 ```
 apps/web/          Next.js app — UI + API route handlers
 packages/shared/    Shared TS types & Zod schemas
-packages/parsers/   Timing-file parsers (Orbits CSV, etc.) — coming in chunk 4
+packages/parsers/   Timing-file parsers (Orbits CSV, etc.) — @paddockboard/parsers
 db/                 Drizzle schema, migrations, seed scripts (@paddockboard/db)
 fixtures/           Sample/synthetic timing files for parser tests
 docs/               GitHub Pages landing page (docs/index.html) + internal dev docs (docs/dev/)
@@ -92,6 +92,20 @@ Club admin sign-in is a real email magic-link flow (not stubbed), so
   (`http://localhost:3000` locally).
 
 See `apps/web/.env.example`.
+
+### File storage
+
+Session file uploads (chunk 5 onward) need `BLOB_READ_WRITE_TOKEN` in
+`apps/web/.env.local`, from a Vercel project's Storage → Blob tab. Not
+required yet for anything currently wired up.
+
+## Parser research
+
+`docs/dev/formats.md` documents what's actually known about MyLaps Orbits'
+CSV export format (sourced from MYLAPS/partner docs) versus what's
+assumed. No real export file has been obtained yet, so
+`fixtures/orbits/csv/` are synthetic — see that folder's README for the
+provenance of each fixture and what to do when a real one shows up.
 
 ## Demo
 
