@@ -1,5 +1,6 @@
 import type { CanonicalField, ParsedSession, SupportedFormat } from "./types";
 import { parseOrbitsCsv } from "./orbits-csv/parse";
+import { parseOrbitsHtml } from "./orbits-html/parse";
 import { parseGenericCsv } from "./generic-csv/parse";
 
 export function parse(
@@ -10,6 +11,8 @@ export function parse(
   switch (format) {
     case "orbits_csv":
       return parseOrbitsCsv(buffer);
+    case "orbits_html":
+      return parseOrbitsHtml(buffer);
     case "generic_csv":
       if (!options?.columnMapping) {
         throw new Error("generic_csv requires a columnMapping");

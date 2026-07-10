@@ -56,7 +56,7 @@ export default async function SessionUploadPage({
 
       <SessionUploadPreview
         sessionId={session.id}
-        source={session.source as "orbits_csv" | "generic_csv" | "manual"}
+        source={session.source as "orbits_csv" | "orbits_html" | "generic_csv" | "manual"}
         classes={seasonClasses}
         publicSlug={session.publicSlug}
         initialStatus={session.status as "draft" | "published"}

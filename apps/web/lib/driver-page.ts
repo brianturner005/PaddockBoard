@@ -17,10 +17,12 @@ export interface DriverResultRow {
 }
 
 export interface DriverPagePayload {
+  driverId: string;
   driverName: string;
   driverNumber: string | null;
   clubName: string;
   clubSlug: string;
+  claimedUserId: string | null;
   results: DriverResultRow[];
   wins: number;
   podiums: number;
@@ -76,10 +78,12 @@ export const getDriverPageData = cache(async (driverId: string): Promise<DriverP
   return {
     status: "ok",
     data: {
+      driverId: found.driver.id,
       driverName: found.driver.displayName,
       driverNumber: found.driver.number,
       clubName: found.club.name,
       clubSlug: found.club.slug,
+      claimedUserId: found.driver.claimedUserId,
       results: rows.map((r) => ({
         sessionPublicSlug: r.sessionPublicSlug,
         sessionName: r.sessionName,
@@ -98,3 +102,25 @@ export const getDriverPageData = cache(async (driverId: string): Promise<DriverP
     },
   };
 });
+
+export interface ClaimedDriverRow {
+  driverId: string;
+  driverName: string;
+  driverNumber: string | null;
+  clubName: string;
+}
+
+export async function getClaimedDrivers(userId: string): Promise<ClaimedDriverRow[]> {
+  const rows = await db
+    .select({ driver: drivers, club: clubs })
+    .from(drivers)
+    .innerJoin(clubs, eq(drivers.clubId, clubs.id))
+    .where(eq(drivers.claimedUserId, userId));
+
+  return rows.map((r) => ({
+    driverId: r.driver.id,
+    driverName: r.driver.displayName,
+    driverNumber: r.driver.number,
+    clubName: r.club.name,
+  }));
+}

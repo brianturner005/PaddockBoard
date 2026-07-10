@@ -59,6 +59,13 @@ Progress:
   `club_members` (roles: `owner`, `editor`) is the access-control source of
   truth; club owners can add/remove members by email from the club page
   (`/admin/clubs/[clubId]`)
+- [x] Driver claiming — a driver can claim their own profile from
+  `/d/[driverId]` via a magic-link email scoped to that specific driver;
+  claimed profiles show up under `/my/drivers`, and a claimed driver can
+  span multiple clubs
+- [x] Orbits HTML parser — `source=orbits_html` sessions parse an Orbits
+  results-grid HTML export the same way as the CSV export (same column
+  alias table), closing out the last Phase 0-era parser gap
 
 ## Stack
 

@@ -1,0 +1,1 @@
+CREATE INDEX "idx_drivers_claimed_user" ON "drivers" USING btree ("claimed_user_id");

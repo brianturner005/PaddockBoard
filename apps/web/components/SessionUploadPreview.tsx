@@ -34,7 +34,7 @@ export function SessionUploadPreview({
   initialColumnMapping,
 }: {
   sessionId: string;
-  source: "orbits_csv" | "generic_csv" | "manual";
+  source: "orbits_csv" | "orbits_html" | "generic_csv" | "manual";
   classes: ClassOption[];
   publicSlug: string;
   initialStatus: "draft" | "published";
@@ -101,7 +101,7 @@ export function SessionUploadPreview({
         return;
       }
 
-      const result = parse(buffer, "orbits_csv");
+      const result = parse(buffer, source === "orbits_html" ? "orbits_html" : "orbits_csv");
       setRows(result.rows);
       setWarnings(result.warnings);
       setUnrecognizedColumns(result.unrecognizedColumns);
@@ -195,11 +195,19 @@ export function SessionUploadPreview({
 
   return (
     <div className="flex flex-col gap-6">
-      {(source === "orbits_csv" || source === "generic_csv") && (
+      {(source === "orbits_csv" || source === "orbits_html" || source === "generic_csv") && (
         <div>
           <label className="flex flex-col gap-1 text-sm">
-            {source === "orbits_csv" ? "Upload Orbits CSV export" : "Upload CSV export"}
-            <input type="file" accept=".csv,text/csv" onChange={handleFileChange} />
+            {source === "orbits_csv"
+              ? "Upload Orbits CSV export"
+              : source === "orbits_html"
+                ? "Upload Orbits HTML export"
+                : "Upload CSV export"}
+            <input
+              type="file"
+              accept={source === "orbits_html" ? ".html,.htm,text/html" : ".csv,text/csv"}
+              onChange={handleFileChange}
+            />
           </label>
           {phase === "uploading" && (
             <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">Uploading…</p>

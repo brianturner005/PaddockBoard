@@ -37,6 +37,11 @@ export default async function AdminHomePage() {
         <h2 className="text-lg font-medium text-black dark:text-zinc-50">Create a club</h2>
         <CreateClubForm />
       </section>
+      <section>
+        <Link href="/my/drivers" className="text-sm underline">
+          Your driver profiles
+        </Link>
+      </section>
     </div>
   );
 }
