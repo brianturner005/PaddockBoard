@@ -53,7 +53,11 @@ on Node's `Buffer`, which Next 15+ no longer auto-polyfills for the client
 bundle. Node's/the browser's built-in `TextDecoder` supports
 `windows-1252` natively (verified), so encoding detection uses that
 instead with zero extra dependency. `papaparse` (CSV tokenization) is
-browser-first by design, so no similar concern there. `apps/web/lib/blob.ts`
-(Vercel Blob wrapper) is written and ready but unused until chunk 5 wires
-up the actual upload route — `BLOB_READ_WRITE_TOKEN` isn't required until
-then.
+browser-first by design, so no similar concern there. Confirmed in chunk 5:
+`SessionUploadPreview` (a client component) imports `parse()` from
+`@paddockboard/parsers` directly and `next build` bundles it with no
+Node-core-module errors.
+
+`apps/web/lib/blob.ts` (Vercel Blob wrapper) is now wired into
+`POST /api/sessions/[id]/upload` (chunk 5) — needs `BLOB_READ_WRITE_TOKEN`
+to actually store a file, not required for anything before that.

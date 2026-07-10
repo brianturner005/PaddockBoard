@@ -11,6 +11,7 @@
   },
   "dependencies": {
     "@paddockboard/db": "*",
+    "@paddockboard/parsers": "*",
     "@paddockboard/shared": "*",
     "@vercel/blob": "^2.6.1",
     "jose": "^6.2.3",

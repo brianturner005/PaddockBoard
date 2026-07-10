@@ -20,7 +20,7 @@ Progress:
 - [x] Chunk 2 — Neon + Drizzle schema
 - [x] Chunk 3 — club/season/class/event/session creation (auth + admin UI)
 - [x] Chunk 4 — Orbits CSV parser package
-- [ ] Chunk 5 — upload + client-side parse + preview UI
+- [x] Chunk 5 — upload + client-side parse + preview UI
 - [ ] Chunk 6 — commit rows + publish flow
 - [ ] Chunk 7 — public results page
 - [ ] Chunk 8 — demo seed data (Blue Ridge Kart Club)
@@ -95,9 +95,10 @@ See `apps/web/.env.example`.
 
 ### File storage
 
-Session file uploads (chunk 5 onward) need `BLOB_READ_WRITE_TOKEN` in
-`apps/web/.env.local`, from a Vercel project's Storage → Blob tab. Not
-required yet for anything currently wired up.
+Session file uploads need `BLOB_READ_WRITE_TOKEN` in `apps/web/.env.local`,
+from a Vercel project's Storage → Blob tab. Used by
+`POST /api/sessions/[id]/upload` and the upload/preview UI at
+`/admin/sessions/[sessionId]/upload`.
 
 ## Parser research
 

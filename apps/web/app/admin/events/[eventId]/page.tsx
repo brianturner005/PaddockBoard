@@ -41,7 +41,10 @@ export default async function EventPage({ params }: { params: Promise<{ eventId:
           <ul className="mt-3 flex flex-col gap-1 text-sm text-zinc-800 dark:text-zinc-200">
             {eventSessions.map((session) => (
               <li key={session.id}>
-                {session.name} — {session.type} — {session.status}
+                <Link className="underline" href={`/admin/sessions/${session.id}/upload`}>
+                  {session.name}
+                </Link>{" "}
+                — {session.type} — {session.status}
               </li>
             ))}
           </ul>

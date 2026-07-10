@@ -1,6 +1,6 @@
 import { eq } from "drizzle-orm";
 import { db } from "@paddockboard/db";
-import { clubs, seasons, events } from "@paddockboard/db/schema";
+import { clubs, seasons, events, sessions } from "@paddockboard/db/schema";
 
 export async function getClubById(clubId: string) {
   const rows = await db.select().from(clubs).where(eq(clubs.id, clubId)).limit(1);
@@ -24,6 +24,18 @@ export async function getEventWithClub(eventId: string) {
     .innerJoin(seasons, eq(events.seasonId, seasons.id))
     .innerJoin(clubs, eq(seasons.clubId, clubs.id))
     .where(eq(events.id, eventId))
+    .limit(1);
+  return rows[0] ?? null;
+}
+
+export async function getSessionWithClub(sessionId: string) {
+  const rows = await db
+    .select({ session: sessions, event: events, season: seasons, club: clubs })
+    .from(sessions)
+    .innerJoin(events, eq(sessions.eventId, events.id))
+    .innerJoin(seasons, eq(events.seasonId, seasons.id))
+    .innerJoin(clubs, eq(seasons.clubId, clubs.id))
+    .where(eq(sessions.id, sessionId))
     .limit(1);
   return rows[0] ?? null;
 }
