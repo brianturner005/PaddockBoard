@@ -87,3 +87,18 @@ Rows with `status: "unknown"` (the parser's "couldn't tell" state) can't be
 committed — `committableStatusSchema` excludes it deliberately, since it's
 a signal for human review, not a real result. The UI blocks saving until
 those rows are resolved.
+
+## Env-dependent modules must be lazy
+
+`next build`'s page-data-collection step imports every route module just
+to inspect it — it doesn't execute handlers, but importing still runs
+top-level module code. `db/client.ts` originally called `neon(databaseUrl)`
+eagerly at module scope and threw if `DATABASE_URL` was unset, which broke
+`next build` in any environment without env vars configured — including
+CI, which has no `.env.local` (that file is local-only and gitignored).
+Fixed by deferring construction behind a `Proxy` so the env var is only
+read on first actual property access (i.e. first real query), not on
+import. `apps/web/lib/{auth,email,blob}.ts` were already written this way
+(env vars read inside function bodies, not at module scope) — `db/client.ts`
+was the one exception. Keep this pattern for anything new that constructs
+a client from an env var.
