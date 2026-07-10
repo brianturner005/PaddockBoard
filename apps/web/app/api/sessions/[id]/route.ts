@@ -4,7 +4,7 @@ import { eq } from "drizzle-orm";
 import { db } from "@paddockboard/db";
 import { sessions, results, drivers } from "@paddockboard/db/schema";
 import { getCurrentUser } from "@/lib/auth";
-import { getSessionWithClub } from "@/lib/ownership";
+import { getSessionWithClub, hasClubAccess } from "@/lib/ownership";
 
 const patchSessionSchema = z.object({
   countsForStandings: z.boolean(),
@@ -19,7 +19,7 @@ export async function GET(_request: NextRequest, { params }: { params: Promise<{
   }
 
   const found = await getSessionWithClub(id);
-  if (!found || found.club.ownerUserId !== user.id) {
+  if (!found || !(await hasClubAccess(found.club.id, user.id))) {
     return NextResponse.json({ error: "Not found" }, { status: 404 });
   }
 
@@ -54,7 +54,7 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
   }
 
   const result = await getSessionWithClub(id);
-  if (!result || result.club.ownerUserId !== user.id) {
+  if (!result || !(await hasClubAccess(result.club.id, user.id))) {
     return NextResponse.json({ error: "Not found" }, { status: 404 });
   }
 

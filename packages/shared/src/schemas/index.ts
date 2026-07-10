@@ -8,3 +8,4 @@ export * from "./result";
 export * from "./points-scheme";
 export * from "./result-edit";
 export * from "./csv-mapping";
+export * from "./club-member";

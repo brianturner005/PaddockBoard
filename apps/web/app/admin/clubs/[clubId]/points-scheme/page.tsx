@@ -4,7 +4,7 @@ import { eq } from "drizzle-orm";
 import { db } from "@paddockboard/db";
 import { pointsSchemes } from "@paddockboard/db/schema";
 import { getCurrentUser } from "@/lib/auth";
-import { getClubById } from "@/lib/ownership";
+import { getClubById, hasClubAccess } from "@/lib/ownership";
 import { PointsSchemeForm } from "@/components/PointsSchemeForm";
 
 export default async function PointsSchemePage({ params }: { params: Promise<{ clubId: string }> }) {
@@ -13,7 +13,7 @@ export default async function PointsSchemePage({ params }: { params: Promise<{ c
   if (!user) return null;
 
   const club = await getClubById(clubId);
-  if (!club || club.ownerUserId !== user.id) {
+  if (!club || !(await hasClubAccess(clubId, user.id))) {
     notFound();
   }
 

@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { eq } from "drizzle-orm";
 import { db } from "@paddockboard/db";
-import { clubs } from "@paddockboard/db/schema";
+import { clubs, clubMembers } from "@paddockboard/db/schema";
 import { getCurrentUser } from "@/lib/auth";
 import { CreateClubForm } from "@/components/CreateClubForm";
 
@@ -9,7 +9,11 @@ export default async function AdminHomePage() {
   const user = await getCurrentUser();
   if (!user) return null; // layout already redirects unauthenticated visitors
 
-  const myClubs = await db.select().from(clubs).where(eq(clubs.ownerUserId, user.id));
+  const myClubs = await db
+    .select({ id: clubs.id, name: clubs.name, slug: clubs.slug })
+    .from(clubMembers)
+    .innerJoin(clubs, eq(clubMembers.clubId, clubs.id))
+    .where(eq(clubMembers.userId, user.id));
 
   return (
     <div className="flex flex-col gap-8">

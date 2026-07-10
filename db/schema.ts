@@ -1,4 +1,16 @@
-import { pgTable, uuid, text, timestamp, integer, bigint, jsonb, date, boolean, index } from "drizzle-orm/pg-core";
+import {
+  pgTable,
+  uuid,
+  text,
+  timestamp,
+  integer,
+  bigint,
+  jsonb,
+  date,
+  boolean,
+  index,
+  uniqueIndex,
+} from "drizzle-orm/pg-core";
 
 // Phase 0 schema. `standings` (a Phase 1+ cache table) intentionally does not
 // exist yet. `points_schemes`, `results.penalties`, and `results.points_override`
@@ -28,6 +40,31 @@ export const clubs = pgTable("clubs", {
   csvColumnMapping: jsonb("csv_column_mapping").$type<Record<string, string>>(),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });
+
+// Who besides the club's original creator can manage it. `clubs.owner_user_id`
+// stays as-is (the account the club was created under); this table is the
+// actual access-control source of truth going forward, seeded with an
+// "owner" row for every existing club's owner (see the migration). Only
+// "owner" members can manage other members; "editor" can do everything
+// else a club admin can (seasons/classes/events/sessions/results).
+export const clubMembers = pgTable(
+  "club_members",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    clubId: uuid("club_id")
+      .notNull()
+      .references(() => clubs.id),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => users.id),
+    role: text("role").$type<"owner" | "editor">().notNull().default("editor"),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [
+    uniqueIndex("idx_club_members_club_user").on(table.clubId, table.userId),
+    index("idx_club_members_user").on(table.userId),
+  ]
+);
 
 export const pointsSchemes = pgTable("points_schemes", {
   id: uuid("id").primaryKey().defaultRandom(),

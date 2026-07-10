@@ -4,7 +4,7 @@ import { eq } from "drizzle-orm";
 import { db } from "@paddockboard/db";
 import { classes } from "@paddockboard/db/schema";
 import { getCurrentUser } from "@/lib/auth";
-import { getSessionWithClub } from "@/lib/ownership";
+import { getSessionWithClub, hasClubAccess } from "@/lib/ownership";
 import { SessionUploadPreview } from "@/components/SessionUploadPreview";
 import { CountsForStandingsToggle } from "@/components/CountsForStandingsToggle";
 import { PublishedResultsEditor } from "@/components/PublishedResultsEditor";
@@ -19,7 +19,7 @@ export default async function SessionUploadPage({
   if (!user) return null;
 
   const result = await getSessionWithClub(sessionId);
-  if (!result || result.club.ownerUserId !== user.id) {
+  if (!result || !(await hasClubAccess(result.club.id, user.id))) {
     notFound();
   }
   const { session, event, season, club } = result;
