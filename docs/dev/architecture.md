@@ -53,7 +53,52 @@ on Node's `Buffer`, which Next 15+ no longer auto-polyfills for the client
 bundle. Node's/the browser's built-in `TextDecoder` supports
 `windows-1252` natively (verified), so encoding detection uses that
 instead with zero extra dependency. `papaparse` (CSV tokenization) is
-browser-first by design, so no similar concern there. `apps/web/lib/blob.ts`
-(Vercel Blob wrapper) is written and ready but unused until chunk 5 wires
-up the actual upload route — `BLOB_READ_WRITE_TOKEN` isn't required until
-then.
+browser-first by design, so no similar concern there. Confirmed in chunk 5:
+`SessionUploadPreview` (a client component) imports `parse()` from
+`@paddockboard/parsers` directly and `next build` bundles it with no
+Node-core-module errors.
+
+`apps/web/lib/blob.ts` (Vercel Blob wrapper) is now wired into
+`POST /api/sessions/[id]/upload` (chunk 5) — needs `BLOB_READ_WRITE_TOKEN`
+to actually store a file, not required for anything before that.
+
+## Committing results (chunk 6)
+
+`POST /api/sessions/[id]/rows` requires a single `classId` for the whole
+session commit — the brief calls out "class splits within one session"
+(multiple classes on track together, common in karting) as real-world
+messiness, but Phase 0 doesn't attempt to parse or assign per-row classes.
+The parser treats the CSV's `Class` column as recognized-but-unmodeled
+(see `docs/dev/formats.md`). **Phase 1 seam**: if per-row class assignment
+is needed, map that column in `packages/parsers` and replace the single
+`classId` field in `commitRowsSchema` with a per-row one — the schema
+already has a `results.class_id` FK per row, not per session, so this is
+additive.
+
+Committing is delete-then-insert per session (no transaction — the
+`neon-http` driver doesn't support one), so re-saving after edits replaces
+rather than accumulates. Driver dedup matches on `(clubId, number)` when a
+number is present, else `(clubId, displayName)` exact match — no
+transponder-based matching yet, since the results-export columns being
+parsed don't carry transponder IDs (that's the entry-list export, a
+different file MYLAPS documents separately).
+
+Rows with `status: "unknown"` (the parser's "couldn't tell" state) can't be
+committed — `committableStatusSchema` excludes it deliberately, since it's
+a signal for human review, not a real result. The UI blocks saving until
+those rows are resolved.
+
+## Env-dependent modules must be lazy
+
+`next build`'s page-data-collection step imports every route module just
+to inspect it — it doesn't execute handlers, but importing still runs
+top-level module code. `db/client.ts` originally called `neon(databaseUrl)`
+eagerly at module scope and threw if `DATABASE_URL` was unset, which broke
+`next build` in any environment without env vars configured — including
+CI, which has no `.env.local` (that file is local-only and gitignored).
+Fixed by deferring construction behind a `Proxy` so the env var is only
+read on first actual property access (i.e. first real query), not on
+import. `apps/web/lib/{auth,email,blob}.ts` were already written this way
+(env vars read inside function bodies, not at module scope) — `db/client.ts`
+was the one exception. Keep this pattern for anything new that constructs
+a client from an env var.
