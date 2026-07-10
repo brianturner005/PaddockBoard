@@ -102,3 +102,23 @@ import. `apps/web/lib/{auth,email,blob}.ts` were already written this way
 (env vars read inside function bodies, not at module scope) — `db/client.ts`
 was the one exception. Keep this pattern for anything new that constructs
 a client from an env var.
+
+## Public results page (chunk 7)
+
+`apps/web/lib/public-session.ts` exports `getPublicSessionData(slug)`,
+wrapped in React's `cache()` so `generateMetadata` and the page component
+(both of which need the same data) share one DB round trip per request
+instead of two. It returns a discriminated result
+(`not_found` | `not_published` | `ok`) rather than just 404-ing on
+anything not publishable — draft sessions and truly-nonexistent slugs get
+distinct messaging (`/r/[slug]/page.tsx`), per the brief's "distinct
+not-published-yet vs not-found vs loading states" requirement.
+`GET /api/public/sessions/[slug]` reuses the same function and sets
+`Cache-Control: public, max-age=60` — no active cache-busting on publish
+yet (seam already noted above).
+
+Results are grouped by class server-side even though Phase 0's commit flow
+(chunk 6) only ever writes one class per session at a time — it's the
+correct shape for the domain model regardless, and costs nothing extra
+now that per-row class assignment becomes possible in Phase 1 (same seam
+noted in the chunk 6 section above).

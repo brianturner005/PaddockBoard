@@ -340,7 +340,10 @@ export function SessionUploadPreview({
 
             {sessionStatus === "published" && (
               <p className="text-sm text-green-700 dark:text-green-400">
-                Published — public page at <code>/r/{publicSlug}</code>
+                Published — public page at{" "}
+                <a href={`/r/${publicSlug}`} className="underline" target="_blank" rel="noopener noreferrer">
+                  /r/{publicSlug}
+                </a>
               </p>
             )}
           </div>
