@@ -74,13 +74,23 @@ Progress:
   row gets its own class picker, defaulted from a parsed `Class` column
   (Orbits CSV/HTML) or a generic-CSV mapping, editable per row before save
 
-**Phase 4 (public discovery) in progress.**
+**Phase 4 (public discovery) complete.**
 
 - [x] Public club/event discovery — the homepage now lists every club
   (`/c/[slug]`), and each club page lists its seasons, classes, and
   published events/sessions. Club names on results/standings/driver pages
   link back to their club page, so browsing works both from the homepage
   down and from a shared results link back out
+
+**Phase 5 (visual design pass) in progress.**
+
+- [x] First design pass — a single accent color (orange) used sparingly
+  for primary actions and P1 highlighting, shared header/footer/position-
+  cell components across all public pages, restyled tables and stat cards,
+  plus two long-standing bugs fixed along the way: the page title was
+  still create-next-app's default, and the Geist font was loaded but never
+  actually applied (a hardcoded `font-family` in `globals.css` silently
+  overrode it)
 
 ## Stack
 
