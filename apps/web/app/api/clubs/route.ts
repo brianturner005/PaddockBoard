@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { eq } from "drizzle-orm";
 import { createClubSchema } from "@paddockboard/shared";
 import { db } from "@paddockboard/db";
-import { clubs, pointsSchemes } from "@paddockboard/db/schema";
+import { clubs, clubMembers, pointsSchemes } from "@paddockboard/db/schema";
 import { getCurrentUser } from "@/lib/auth";
 import { ensureUniqueClubSlug } from "@/lib/slug";
 
@@ -12,8 +12,12 @@ export async function GET() {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const rows = await db.select().from(clubs).where(eq(clubs.ownerUserId, user.id));
-  return NextResponse.json({ clubs: rows });
+  const rows = await db
+    .select({ club: clubs })
+    .from(clubMembers)
+    .innerJoin(clubs, eq(clubMembers.clubId, clubs.id))
+    .where(eq(clubMembers.userId, user.id));
+  return NextResponse.json({ clubs: rows.map((r) => r.club) });
 }
 
 export async function POST(request: NextRequest) {
@@ -45,6 +49,14 @@ export async function POST(request: NextRequest) {
   await db.insert(pointsSchemes).values({
     clubId: club.id,
     name: "Default",
+  });
+
+  // club_members is the actual access-control source of truth (see
+  // lib/ownership.ts) — the creator is always seeded in as owner.
+  await db.insert(clubMembers).values({
+    clubId: club.id,
+    userId: user.id,
+    role: "owner",
   });
 
   return NextResponse.json({ club }, { status: 201 });

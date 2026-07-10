@@ -4,8 +4,9 @@ import { eq } from "drizzle-orm";
 import { db } from "@paddockboard/db";
 import { seasons } from "@paddockboard/db/schema";
 import { getCurrentUser } from "@/lib/auth";
-import { getClubById } from "@/lib/ownership";
+import { getClubById, getClubMembership } from "@/lib/ownership";
 import { CreateSeasonForm } from "@/components/CreateSeasonForm";
+import { ClubMembersPanel } from "@/components/ClubMembersPanel";
 
 export default async function ClubPage({ params }: { params: Promise<{ clubId: string }> }) {
   const { clubId } = await params;
@@ -13,7 +14,8 @@ export default async function ClubPage({ params }: { params: Promise<{ clubId: s
   if (!user) return null;
 
   const club = await getClubById(clubId);
-  if (!club || club.ownerUserId !== user.id) {
+  const membership = club ? await getClubMembership(clubId, user.id) : null;
+  if (!club || !membership) {
     notFound();
   }
 
@@ -49,6 +51,8 @@ export default async function ClubPage({ params }: { params: Promise<{ clubId: s
         )}
         <CreateSeasonForm clubId={club.id} />
       </section>
+
+      <ClubMembersPanel clubId={club.id} isOwner={membership.role === "owner"} currentUserId={user.id} />
     </div>
   );
 }

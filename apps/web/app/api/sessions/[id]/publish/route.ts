@@ -3,7 +3,7 @@ import { eq } from "drizzle-orm";
 import { db } from "@paddockboard/db";
 import { sessions } from "@paddockboard/db/schema";
 import { getCurrentUser } from "@/lib/auth";
-import { getSessionWithClub } from "@/lib/ownership";
+import { getSessionWithClub, hasClubAccess } from "@/lib/ownership";
 
 export async function POST(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -14,7 +14,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
   }
 
   const result = await getSessionWithClub(id);
-  if (!result || result.club.ownerUserId !== user.id) {
+  if (!result || !(await hasClubAccess(result.club.id, user.id))) {
     return NextResponse.json({ error: "Not found" }, { status: 404 });
   }
 

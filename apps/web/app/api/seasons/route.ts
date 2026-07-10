@@ -3,7 +3,7 @@ import { createSeasonSchema } from "@paddockboard/shared";
 import { db } from "@paddockboard/db";
 import { seasons } from "@paddockboard/db/schema";
 import { getCurrentUser } from "@/lib/auth";
-import { getClubById } from "@/lib/ownership";
+import { getClubById, hasClubAccess } from "@/lib/ownership";
 
 export async function POST(request: NextRequest) {
   const user = await getCurrentUser();
@@ -18,7 +18,7 @@ export async function POST(request: NextRequest) {
   }
 
   const club = await getClubById(parsed.data.clubId);
-  if (!club || club.ownerUserId !== user.id) {
+  if (!club || !(await hasClubAccess(club.id, user.id))) {
     return NextResponse.json({ error: "Not found" }, { status: 404 });
   }
 

@@ -53,6 +53,13 @@ Progress:
   (`clubs.csv_column_mapping`) and pre-filled on the next upload of the
   same format
 
+**Phase 2 (multi-club, driver self-service) in progress.**
+
+- [x] Multi-user club access — a club can now have more than one admin.
+  `club_members` (roles: `owner`, `editor`) is the access-control source of
+  truth; club owners can add/remove members by email from the club page
+  (`/admin/clubs/[clubId]`)
+
 ## Stack
 
 - **Frontend + API**: Next.js (App Router) on Vercel — a single app; route

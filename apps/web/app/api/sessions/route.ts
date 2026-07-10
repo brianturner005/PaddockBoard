@@ -4,7 +4,7 @@ import { createSessionSchema } from "@paddockboard/shared";
 import { db } from "@paddockboard/db";
 import { sessions } from "@paddockboard/db/schema";
 import { getCurrentUser } from "@/lib/auth";
-import { getEventWithClub } from "@/lib/ownership";
+import { getEventWithClub, hasClubAccess } from "@/lib/ownership";
 
 export async function POST(request: NextRequest) {
   const user = await getCurrentUser();
@@ -19,7 +19,7 @@ export async function POST(request: NextRequest) {
   }
 
   const result = await getEventWithClub(parsed.data.eventId);
-  if (!result || result.club.ownerUserId !== user.id) {
+  if (!result || !(await hasClubAccess(result.club.id, user.id))) {
     return NextResponse.json({ error: "Not found" }, { status: 404 });
   }
 

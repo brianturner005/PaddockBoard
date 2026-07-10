@@ -1,9 +1,31 @@
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import { db } from "@paddockboard/db";
-import { clubs, seasons, events, sessions, results } from "@paddockboard/db/schema";
+import { clubs, clubMembers, seasons, events, sessions, results } from "@paddockboard/db/schema";
 
 export async function getClubById(clubId: string) {
   const rows = await db.select().from(clubs).where(eq(clubs.id, clubId)).limit(1);
+  return rows[0] ?? null;
+}
+
+// The access-control check every route/page should use once it has a
+// clubId in hand — any member (owner or editor) can manage the club's
+// data. See `getClubMembership` for call sites that also need to know
+// *which* role, e.g. to gate member management to owners.
+export async function hasClubAccess(clubId: string, userId: string): Promise<boolean> {
+  const rows = await db
+    .select({ id: clubMembers.id })
+    .from(clubMembers)
+    .where(and(eq(clubMembers.clubId, clubId), eq(clubMembers.userId, userId)))
+    .limit(1);
+  return rows.length > 0;
+}
+
+export async function getClubMembership(clubId: string, userId: string) {
+  const rows = await db
+    .select()
+    .from(clubMembers)
+    .where(and(eq(clubMembers.clubId, clubId), eq(clubMembers.userId, userId)))
+    .limit(1);
   return rows[0] ?? null;
 }
 

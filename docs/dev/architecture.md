@@ -256,3 +256,46 @@ of maintaining an alias table for formats nobody's documented.
   least one column mapped to driver name — every other field degrades
   gracefully to a warning (same as orbits-csv), but a nameless row isn't
   useful to anyone reviewing the preview table.
+
+# Phase 2
+
+## Multi-user club access
+
+Phase 0/1 assumed a single owner per club (`clubs.owner_user_id`), flagged
+back then as a Phase 1+ seam. First Phase 2 chunk: a club can now have more
+than one person managing it.
+
+- **`club_members` is the access-control source of truth going forward.**
+  `clubs.owner_user_id` is left as-is (the account the club was created
+  under — still useful as a denormalized "who made this" reference) but no
+  route or page checks it anymore. Every place that used to compare
+  `club.ownerUserId !== user.id` now calls `hasClubAccess(clubId, userId)`
+  (`apps/web/lib/ownership.ts`), which is a single indexed lookup against
+  `club_members` rather than re-deriving through whatever join chain got
+  the caller to a `club` row. That's ~15 call sites (every admin page and
+  every write-side API route) — mechanical, one check swapped for another,
+  no behavior change beyond "more than one user can now pass."
+- **Two roles, not a permissions matrix.** `owner` can do everything
+  `editor` can (seasons/classes/events/sessions/results) plus manage
+  membership; `editor` can't add or remove members. No finer-grained
+  scoping (e.g. "can edit results but not points schemes") — clubs are
+  small volunteer operations, not organizations that need RBAC.
+- **Backfill migration.** Every club that already existed only had
+  `owner_user_id` set, nothing in `club_members` — without a backfill,
+  flipping the access check over would have locked every existing club
+  owner out of their own club on deploy. `db/migrations/0004_*.sql` has a
+  hand-added `INSERT ... SELECT id, owner_user_id, 'owner' FROM clubs`
+  after the generated `CREATE TABLE` (drizzle-kit only generates schema
+  DDL, not data backfills — same manual-SQL-paste workflow used for every
+  migration so far, just with one extra statement appended by hand).
+- **Adding a member reuses `findOrCreateUserByEmail`** (`lib/auth.ts`,
+  already existed for the magic-link flow) — an owner adds someone by
+  email with no separate "invite accepted" step; the next time that email
+  signs in via magic link, the club shows up under "Your clubs" because
+  `admin`'s club list now joins through `club_members` instead of
+  filtering `clubs` by `owner_user_id`.
+- **Can't remove the last owner.** `DELETE /api/clubs/[id]/members`
+  counts remaining `role='owner'` rows (excluding the one being removed)
+  and rejects with 400 if that would hit zero — otherwise a club could be
+  locked out of its own membership management entirely, with no path back
+  in short of a manual DB fix.

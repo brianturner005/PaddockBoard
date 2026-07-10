@@ -4,6 +4,7 @@ import { updatePointsSchemeSchema } from "@paddockboard/shared";
 import { db } from "@paddockboard/db";
 import { pointsSchemes, clubs } from "@paddockboard/db/schema";
 import { getCurrentUser } from "@/lib/auth";
+import { hasClubAccess } from "@/lib/ownership";
 
 export async function PATCH(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -26,7 +27,7 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
     .where(eq(pointsSchemes.id, id))
     .limit(1);
 
-  if (!existing || existing.club.ownerUserId !== user.id) {
+  if (!existing || !(await hasClubAccess(existing.club.id, user.id))) {
     return NextResponse.json({ error: "Not found" }, { status: 404 });
   }
 

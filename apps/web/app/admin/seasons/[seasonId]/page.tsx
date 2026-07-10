@@ -4,7 +4,7 @@ import { eq } from "drizzle-orm";
 import { db } from "@paddockboard/db";
 import { classes, events } from "@paddockboard/db/schema";
 import { getCurrentUser } from "@/lib/auth";
-import { getSeasonWithClub } from "@/lib/ownership";
+import { getSeasonWithClub, hasClubAccess } from "@/lib/ownership";
 import { CreateClassForm } from "@/components/CreateClassForm";
 import { CreateEventForm } from "@/components/CreateEventForm";
 
@@ -14,7 +14,7 @@ export default async function SeasonPage({ params }: { params: Promise<{ seasonI
   if (!user) return null;
 
   const result = await getSeasonWithClub(seasonId);
-  if (!result || result.club.ownerUserId !== user.id) {
+  if (!result || !(await hasClubAccess(result.club.id, user.id))) {
     notFound();
   }
   const { season, club } = result;

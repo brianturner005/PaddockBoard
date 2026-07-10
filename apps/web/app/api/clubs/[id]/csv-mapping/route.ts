@@ -4,7 +4,7 @@ import { updateCsvColumnMappingSchema } from "@paddockboard/shared";
 import { db } from "@paddockboard/db";
 import { clubs } from "@paddockboard/db/schema";
 import { getCurrentUser } from "@/lib/auth";
-import { getClubById } from "@/lib/ownership";
+import { getClubById, hasClubAccess } from "@/lib/ownership";
 
 export async function PATCH(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -15,7 +15,7 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
   }
 
   const club = await getClubById(id);
-  if (!club || club.ownerUserId !== user.id) {
+  if (!club || !(await hasClubAccess(id, user.id))) {
     return NextResponse.json({ error: "Not found" }, { status: 404 });
   }
 

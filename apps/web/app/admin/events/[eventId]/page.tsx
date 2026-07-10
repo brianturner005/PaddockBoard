@@ -4,7 +4,7 @@ import { eq } from "drizzle-orm";
 import { db } from "@paddockboard/db";
 import { sessions } from "@paddockboard/db/schema";
 import { getCurrentUser } from "@/lib/auth";
-import { getEventWithClub } from "@/lib/ownership";
+import { getEventWithClub, hasClubAccess } from "@/lib/ownership";
 import { CreateSessionForm } from "@/components/CreateSessionForm";
 
 export default async function EventPage({ params }: { params: Promise<{ eventId: string }> }) {
@@ -13,7 +13,7 @@ export default async function EventPage({ params }: { params: Promise<{ eventId:
   if (!user) return null;
 
   const result = await getEventWithClub(eventId);
-  if (!result || result.club.ownerUserId !== user.id) {
+  if (!result || !(await hasClubAccess(result.club.id, user.id))) {
     notFound();
   }
   const { event, season } = result;
