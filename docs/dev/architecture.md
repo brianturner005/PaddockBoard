@@ -61,3 +61,29 @@ Node-core-module errors.
 `apps/web/lib/blob.ts` (Vercel Blob wrapper) is now wired into
 `POST /api/sessions/[id]/upload` (chunk 5) — needs `BLOB_READ_WRITE_TOKEN`
 to actually store a file, not required for anything before that.
+
+## Committing results (chunk 6)
+
+`POST /api/sessions/[id]/rows` requires a single `classId` for the whole
+session commit — the brief calls out "class splits within one session"
+(multiple classes on track together, common in karting) as real-world
+messiness, but Phase 0 doesn't attempt to parse or assign per-row classes.
+The parser treats the CSV's `Class` column as recognized-but-unmodeled
+(see `docs/dev/formats.md`). **Phase 1 seam**: if per-row class assignment
+is needed, map that column in `packages/parsers` and replace the single
+`classId` field in `commitRowsSchema` with a per-row one — the schema
+already has a `results.class_id` FK per row, not per session, so this is
+additive.
+
+Committing is delete-then-insert per session (no transaction — the
+`neon-http` driver doesn't support one), so re-saving after edits replaces
+rather than accumulates. Driver dedup matches on `(clubId, number)` when a
+number is present, else `(clubId, displayName)` exact match — no
+transponder-based matching yet, since the results-export columns being
+parsed don't carry transponder IDs (that's the entry-list export, a
+different file MYLAPS documents separately).
+
+Rows with `status: "unknown"` (the parser's "couldn't tell" state) can't be
+committed — `committableStatusSchema` excludes it deliberately, since it's
+a signal for human review, not a real result. The UI blocks saving until
+those rows are resolved.

@@ -21,7 +21,7 @@ Progress:
 - [x] Chunk 3 — club/season/class/event/session creation (auth + admin UI)
 - [x] Chunk 4 — Orbits CSV parser package
 - [x] Chunk 5 — upload + client-side parse + preview UI
-- [ ] Chunk 6 — commit rows + publish flow
+- [x] Chunk 6 — commit rows + publish flow
 - [ ] Chunk 7 — public results page
 - [ ] Chunk 8 — demo seed data (Blue Ridge Kart Club)
 - [ ] Chunk 9 — landing page + docs pass

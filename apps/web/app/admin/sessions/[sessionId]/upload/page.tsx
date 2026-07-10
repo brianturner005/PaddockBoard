@@ -1,5 +1,8 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { eq } from "drizzle-orm";
+import { db } from "@paddockboard/db";
+import { classes } from "@paddockboard/db/schema";
 import { getCurrentUser } from "@/lib/auth";
 import { getSessionWithClub } from "@/lib/ownership";
 import { SessionUploadPreview } from "@/components/SessionUploadPreview";
@@ -17,7 +20,12 @@ export default async function SessionUploadPage({
   if (!result || result.club.ownerUserId !== user.id) {
     notFound();
   }
-  const { session, event } = result;
+  const { session, event, season } = result;
+
+  const seasonClasses = await db
+    .select({ id: classes.id, name: classes.name })
+    .from(classes)
+    .where(eq(classes.seasonId, season.id));
 
   return (
     <div className="flex flex-col gap-6">
@@ -31,7 +39,13 @@ export default async function SessionUploadPage({
         </p>
       </div>
 
-      <SessionUploadPreview sessionId={session.id} source={session.source as "orbits_csv" | "manual"} />
+      <SessionUploadPreview
+        sessionId={session.id}
+        source={session.source as "orbits_csv" | "manual"}
+        classes={seasonClasses}
+        publicSlug={session.publicSlug}
+        initialStatus={session.status as "draft" | "published"}
+      />
     </div>
   );
 }

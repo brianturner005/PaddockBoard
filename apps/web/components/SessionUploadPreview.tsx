@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { parse, type ParsedRow, type ParseWarning, type ResultStatus } from "@paddockboard/parsers";
-import { buttonClass, inputClass } from "./form-styles";
+import { buttonClass, inputClass, labelClass } from "./form-styles";
 
 const STATUS_OPTIONS: ResultStatus[] = ["finished", "dnf", "dns", "dsq", "unknown"];
 
@@ -18,20 +18,40 @@ function blankRow(): ParsedRow {
   return { position: null, driverName: "", status: "finished", rawRow: {} };
 }
 
+interface ClassOption {
+  id: string;
+  name: string;
+}
+
 export function SessionUploadPreview({
   sessionId,
   source,
+  classes,
+  publicSlug,
+  initialStatus,
 }: {
   sessionId: string;
   source: "orbits_csv" | "manual";
+  classes: ClassOption[];
+  publicSlug: string;
+  initialStatus: "draft" | "published";
 }) {
-  const [rows, setRows] = useState<ParsedRow[]>(source === "manual" ? [] : []);
+  const [rows, setRows] = useState<ParsedRow[]>([]);
   const [warnings, setWarnings] = useState<ParseWarning[]>([]);
   const [unrecognizedColumns, setUnrecognizedColumns] = useState<string[]>([]);
   const [phase, setPhase] = useState<"idle" | "uploading" | "parsing" | "ready" | "error">(
     source === "manual" ? "ready" : "idle"
   );
   const [error, setError] = useState<string | null>(null);
+
+  const [classId, setClassId] = useState(classes[0]?.id ?? "");
+  const [saveState, setSaveState] = useState<"idle" | "saving" | "saved" | "error">("idle");
+  const [saveError, setSaveError] = useState<string | null>(null);
+
+  const [sessionStatus, setSessionStatus] = useState(initialStatus);
+  const [publishState, setPublishState] = useState<"idle" | "publishing" | "error">("idle");
+
+  const hasUnknownStatus = rows.some((row) => row.status === "unknown");
 
   async function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
@@ -74,6 +94,48 @@ export function SessionUploadPreview({
 
   function removeRow(index: number) {
     setRows((prev) => prev.filter((_, i) => i !== index));
+  }
+
+  async function handleSave() {
+    setSaveState("saving");
+    setSaveError(null);
+
+    const res = await fetch(`/api/sessions/${sessionId}/rows`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        classId,
+        rows: rows.map((row) => ({
+          position: row.position,
+          driverName: row.driverName,
+          driverNumber: row.driverNumber,
+          laps: row.laps,
+          bestLapMs: row.bestLapMs,
+          totalTimeMs: row.totalTimeMs,
+          gapMs: row.gapMs,
+          status: row.status,
+        })),
+      }),
+    });
+
+    if (!res.ok) {
+      setSaveState("error");
+      setSaveError("Could not save results. Check the rows and try again.");
+      return;
+    }
+
+    setSaveState("saved");
+  }
+
+  async function handlePublish() {
+    setPublishState("publishing");
+    const res = await fetch(`/api/sessions/${sessionId}/publish`, { method: "POST" });
+    if (!res.ok) {
+      setPublishState("error");
+      return;
+    }
+    setPublishState("idle");
+    setSessionStatus("published");
   }
 
   return (
@@ -214,6 +276,74 @@ export function SessionUploadPreview({
           >
             + Add row manually
           </button>
+
+          <div className="mt-6 flex flex-col gap-3 border-t border-zinc-200 pt-6 dark:border-zinc-800">
+            {classes.length === 0 ? (
+              <p className="text-sm text-red-600">
+                This season has no classes yet — create one before saving results.
+              </p>
+            ) : (
+              <label className={labelClass}>
+                Class
+                <select
+                  value={classId}
+                  onChange={(e) => setClassId(e.target.value)}
+                  className={`max-w-xs ${inputClass}`}
+                >
+                  {classes.map((c) => (
+                    <option key={c.id} value={c.id}>
+                      {c.name}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            )}
+
+            {hasUnknownStatus && (
+              <p className="text-sm text-red-600">
+                Some rows have an &ldquo;unknown&rdquo; status — resolve them before saving.
+              </p>
+            )}
+
+            <div className="flex items-center gap-3">
+              <button
+                type="button"
+                onClick={handleSave}
+                disabled={
+                  saveState === "saving" || rows.length === 0 || !classId || hasUnknownStatus
+                }
+                className={buttonClass}
+              >
+                {saveState === "saving" ? "Saving…" : "Save results"}
+              </button>
+              {saveState === "saved" && (
+                <span className="text-sm text-green-700 dark:text-green-400">Saved.</span>
+              )}
+              {saveState === "error" && <span className="text-sm text-red-600">{saveError}</span>}
+            </div>
+
+            {saveState === "saved" && sessionStatus === "draft" && (
+              <div className="flex items-center gap-3">
+                <button
+                  type="button"
+                  onClick={handlePublish}
+                  disabled={publishState === "publishing"}
+                  className={buttonClass}
+                >
+                  {publishState === "publishing" ? "Publishing…" : "Publish session"}
+                </button>
+                {publishState === "error" && (
+                  <span className="text-sm text-red-600">Could not publish. Try again.</span>
+                )}
+              </div>
+            )}
+
+            {sessionStatus === "published" && (
+              <p className="text-sm text-green-700 dark:text-green-400">
+                Published — public page at <code>/r/{publicSlug}</code>
+              </p>
+            )}
+          </div>
         </div>
       )}
     </div>
