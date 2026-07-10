@@ -23,7 +23,7 @@ Progress:
 - [x] Chunk 5 — upload + client-side parse + preview UI
 - [x] Chunk 6 — commit rows + publish flow
 - [ ] Chunk 7 — public results page
-- [ ] Chunk 8 — demo seed data (Blue Ridge Kart Club)
+- [x] Chunk 8 — demo seed data (Blue Ridge Kart Club) — built ahead of chunk 7 to populate the admin UI early; the public `/r/blue-ridge-demo` link isn't live until chunk 7 lands
 - [ ] Chunk 9 — landing page + docs pass
 
 ## Stack
@@ -110,5 +110,10 @@ provenance of each fixture and what to do when a real one shows up.
 
 ## Demo
 
-Once chunk 8 lands, a seeded demo club ("Blue Ridge Kart Club", fictional)
-will be linked here with a live results page.
+`npm run db:seed` (needs `DATABASE_URL` and `SEED_OWNER_EMAIL` — see
+`.env.example`) seeds a fictional demo club, "Blue Ridge Kart Club," with a
+full season, a published feature-final session (mixed finishing order,
+a lapped car, two DNFs), and 14 drivers under whatever account
+`SEED_OWNER_EMAIL` resolves to. Idempotent — re-running replaces the demo
+club's data rather than duplicating it. The public results link
+(`/r/blue-ridge-demo`) goes live once chunk 7 (public results page) lands.
