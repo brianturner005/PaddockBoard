@@ -7,6 +7,11 @@ clean, shareable results page and live championship standings.
 > Upload your timing file. Get a beautiful results site. Done before the
 > next heat starts.
 
+**[Landing page](https://brianturner005.github.io/PaddockBoard/)** · **Live app:** TODO — add once a production domain is confirmed
+
+This README is the engineering doc (setup, architecture, build status). The
+landing page carries the pitch for non-technical visitors.
+
 ## Status
 
 **Phase 0 (skeleton) in progress.** Goal: one club, one uploaded file, one
@@ -24,7 +29,7 @@ Progress:
 - [x] Chunk 6 — commit rows + publish flow
 - [ ] Chunk 7 — public results page
 - [x] Chunk 8 — demo seed data (Blue Ridge Kart Club) — built ahead of chunk 7 to populate the admin UI early; the public `/r/blue-ridge-demo` link isn't live until chunk 7 lands
-- [ ] Chunk 9 — landing page + docs pass
+- [x] Chunk 9 — landing page + docs pass — built ahead of chunk 7 at the user's request; GitHub Pages still needs to be enabled in repo settings (Settings → Pages → `main` / `/docs`)
 
 ## Stack
 
@@ -117,3 +122,15 @@ a lapped car, two DNFs), and 14 drivers under whatever account
 `SEED_OWNER_EMAIL` resolves to. Idempotent — re-running replaces the demo
 club's data rather than duplicating it. The public results link
 (`/r/blue-ridge-demo`) goes live once chunk 7 (public results page) lands.
+
+## Landing page
+
+`docs/index.html` + `docs/styles.css` — plain hand-written HTML/CSS, no
+build step, served by GitHub Pages directly from `/docs` on `main`.
+Internal dev docs (`docs/dev/`) live alongside it but aren't linked from
+the public page. To enable/update the live URL: repo Settings → Pages →
+Source: Deploy from a branch → `main` / `/docs`.
+
+## License
+
+MIT — see [`LICENSE`](LICENSE).
