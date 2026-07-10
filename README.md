@@ -31,7 +31,7 @@ Progress:
 - [x] Chunk 8 — demo seed data (Blue Ridge Kart Club)
 - [x] Chunk 9 — landing page + docs pass
 
-**Phase 1 (championship engine) in progress.**
+**Phase 1 (championship engine) complete.**
 
 - [x] Points schemes + standings engine — `packages/standings`'
   `computeStandings` pure function (drop rounds, countback, bonus points,
@@ -39,10 +39,19 @@ Progress:
   in the admin UI (`/admin/clubs/[clubId]/points-scheme`)
 - [x] Standings page (`/standings/[classId]`) — recomputed per request,
   with ↑/↓ position-change indicators since the last scored round
-- [ ] Result editing + audit trail
-- [ ] Driver auto-pages
-- [ ] Manual entry grid (standalone, not just inside the upload flow)
-- [ ] Generic CSV parser + per-club column mapping
+- [x] Result editing + audit trail — `PublishedResultsEditor` lets club
+  admins correct committed results on a published session; every change
+  requires a reason and is logged to `result_edits` (previous/new value
+  snapshots), viewable per-row via a "History" toggle
+- [x] Driver auto-pages (`/d/[driverId]`) — wins/podiums/best finish plus a
+  full results history, linked from every public results and standings
+  table
+- [x] Manual entry grid — turned out to already work from Phase 0: `source=manual` sessions open `SessionUploadPreview` straight to an empty editable table (no file step), so it's the same class-picker/save/publish flow, just without a parse step first
+- [x] Generic CSV parser + per-club column mapping — `source=generic_csv`
+  sessions let an admin map their own timing software's column headers to
+  PaddockBoard's fields by hand; the mapping is saved per club
+  (`clubs.csv_column_mapping`) and pre-filled on the next upload of the
+  same format
 
 ## Stack
 

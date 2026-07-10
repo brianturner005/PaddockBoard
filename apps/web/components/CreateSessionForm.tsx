@@ -7,6 +7,7 @@ import { inputClass, buttonClass, labelClass } from "./form-styles";
 const SESSION_TYPES = ["practice", "qualifying", "heat", "final", "feature"] as const;
 const SESSION_SOURCES = [
   { value: "orbits_csv", label: "Upload an Orbits CSV export" },
+  { value: "generic_csv", label: "Upload a CSV export from other timing software" },
   { value: "manual", label: "Enter results manually" },
 ] as const;
 

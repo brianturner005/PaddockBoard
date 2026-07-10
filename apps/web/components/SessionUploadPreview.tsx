@@ -1,18 +1,19 @@
 "use client";
 
 import { useState } from "react";
-import { parse, type ParsedRow, type ParseWarning, type ResultStatus } from "@paddockboard/parsers";
+import {
+  parse,
+  readCsvHeaders,
+  type CanonicalField,
+  type ParsedRow,
+  type ParseWarning,
+  type ResultStatus,
+} from "@paddockboard/parsers";
 import { buttonClass, inputClass, labelClass } from "./form-styles";
+import { GenericCsvColumnMapper } from "./GenericCsvColumnMapper";
+import { formatMs } from "@/lib/format";
 
 const STATUS_OPTIONS: ResultStatus[] = ["finished", "dnf", "dns", "dsq", "unknown"];
-
-function formatMs(ms: number | undefined): string {
-  if (ms === undefined) return "—";
-  const totalSeconds = ms / 1000;
-  const minutes = Math.floor(totalSeconds / 60);
-  const seconds = (totalSeconds % 60).toFixed(3);
-  return minutes > 0 ? `${minutes}:${seconds.padStart(6, "0")}` : seconds;
-}
 
 function blankRow(): ParsedRow {
   return { position: null, driverName: "", status: "finished", rawRow: {} };
@@ -29,20 +30,28 @@ export function SessionUploadPreview({
   classes,
   publicSlug,
   initialStatus,
+  clubId,
+  initialColumnMapping,
 }: {
   sessionId: string;
-  source: "orbits_csv" | "manual";
+  source: "orbits_csv" | "generic_csv" | "manual";
   classes: ClassOption[];
   publicSlug: string;
   initialStatus: "draft" | "published";
+  clubId: string;
+  initialColumnMapping?: Record<string, string> | null;
 }) {
   const [rows, setRows] = useState<ParsedRow[]>([]);
   const [warnings, setWarnings] = useState<ParseWarning[]>([]);
   const [unrecognizedColumns, setUnrecognizedColumns] = useState<string[]>([]);
-  const [phase, setPhase] = useState<"idle" | "uploading" | "parsing" | "ready" | "error">(
+  const [phase, setPhase] = useState<"idle" | "uploading" | "parsing" | "mapping" | "ready" | "error">(
     source === "manual" ? "ready" : "idle"
   );
   const [error, setError] = useState<string | null>(null);
+
+  const [fileBuffer, setFileBuffer] = useState<ArrayBuffer | null>(null);
+  const [csvHeaders, setCsvHeaders] = useState<string[]>([]);
+  const [columnMapping, setColumnMapping] = useState<Record<string, CanonicalField | "">>({});
 
   const [classId, setClassId] = useState(classes[0]?.id ?? "");
   const [saveState, setSaveState] = useState<"idle" | "saving" | "saved" | "error">("idle");
@@ -77,6 +86,21 @@ export function SessionUploadPreview({
     setPhase("parsing");
     try {
       const buffer = await file.arrayBuffer();
+
+      if (source === "generic_csv") {
+        const { headers } = readCsvHeaders(buffer);
+        const prefilled: Record<string, CanonicalField | ""> = {};
+        for (const header of headers) {
+          const saved = initialColumnMapping?.[header];
+          if (saved) prefilled[header] = saved as CanonicalField;
+        }
+        setFileBuffer(buffer);
+        setCsvHeaders(headers);
+        setColumnMapping(prefilled);
+        setPhase("mapping");
+        return;
+      }
+
       const result = parse(buffer, "orbits_csv");
       setRows(result.rows);
       setWarnings(result.warnings);
@@ -86,6 +110,37 @@ export function SessionUploadPreview({
       setPhase("error");
       setError(err instanceof Error ? err.message : "Could not read this file.");
     }
+  }
+
+  function handleMappingChange(header: string, field: CanonicalField | "") {
+    setColumnMapping((prev) => ({ ...prev, [header]: field }));
+  }
+
+  function handleApplyMapping() {
+    if (!fileBuffer) return;
+
+    const mapping: Record<string, CanonicalField> = {};
+    for (const [header, field] of Object.entries(columnMapping)) {
+      if (field) mapping[header] = field;
+    }
+
+    try {
+      const result = parse(fileBuffer, "generic_csv", { columnMapping: mapping });
+      setRows(result.rows);
+      setWarnings(result.warnings);
+      setUnrecognizedColumns(result.unrecognizedColumns);
+      setPhase("ready");
+    } catch (err) {
+      setPhase("error");
+      setError(err instanceof Error ? err.message : "Could not read this file.");
+      return;
+    }
+
+    fetch(`/api/clubs/${clubId}/csv-mapping`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ columnMapping: mapping }),
+    }).catch(() => {});
   }
 
   function updateRow(index: number, patch: Partial<ParsedRow>) {
@@ -140,10 +195,10 @@ export function SessionUploadPreview({
 
   return (
     <div className="flex flex-col gap-6">
-      {source === "orbits_csv" && (
+      {(source === "orbits_csv" || source === "generic_csv") && (
         <div>
           <label className="flex flex-col gap-1 text-sm">
-            Upload Orbits CSV export
+            {source === "orbits_csv" ? "Upload Orbits CSV export" : "Upload CSV export"}
             <input type="file" accept=".csv,text/csv" onChange={handleFileChange} />
           </label>
           {phase === "uploading" && (
@@ -154,6 +209,15 @@ export function SessionUploadPreview({
           )}
           {error && <p className="mt-1 text-sm text-red-600">{error}</p>}
         </div>
+      )}
+
+      {phase === "mapping" && (
+        <GenericCsvColumnMapper
+          headers={csvHeaders}
+          mapping={columnMapping}
+          onChange={handleMappingChange}
+          onApply={handleApplyMapping}
+        />
       )}
 
       {warnings.length > 0 && (

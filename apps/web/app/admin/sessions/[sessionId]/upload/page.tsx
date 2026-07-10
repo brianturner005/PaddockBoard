@@ -7,6 +7,7 @@ import { getCurrentUser } from "@/lib/auth";
 import { getSessionWithClub } from "@/lib/ownership";
 import { SessionUploadPreview } from "@/components/SessionUploadPreview";
 import { CountsForStandingsToggle } from "@/components/CountsForStandingsToggle";
+import { PublishedResultsEditor } from "@/components/PublishedResultsEditor";
 
 export default async function SessionUploadPage({
   params,
@@ -21,7 +22,7 @@ export default async function SessionUploadPage({
   if (!result || result.club.ownerUserId !== user.id) {
     notFound();
   }
-  const { session, event, season } = result;
+  const { session, event, season, club } = result;
 
   const seasonClasses = await db
     .select({ id: classes.id, name: classes.name })
@@ -43,12 +44,24 @@ export default async function SessionUploadPage({
         </div>
       </div>
 
+      {session.status === "published" && (
+        <div>
+          <h2 className="text-lg font-semibold text-black dark:text-zinc-50">Edit published results</h2>
+          <p className="mb-3 text-sm text-zinc-600 dark:text-zinc-400">
+            Changes here are logged with a reason and visible in each row&rsquo;s history.
+          </p>
+          <PublishedResultsEditor sessionId={session.id} />
+        </div>
+      )}
+
       <SessionUploadPreview
         sessionId={session.id}
-        source={session.source as "orbits_csv" | "manual"}
+        source={session.source as "orbits_csv" | "generic_csv" | "manual"}
         classes={seasonClasses}
         publicSlug={session.publicSlug}
         initialStatus={session.status as "draft" | "published"}
+        clubId={club.id}
+        initialColumnMapping={club.csvColumnMapping}
       />
     </div>
   );

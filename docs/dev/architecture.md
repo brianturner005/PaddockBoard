@@ -167,3 +167,92 @@ fewer round.
 `/standings/[classId]` works but isn't a pretty URL. A short slug (like
 sessions' `public_slug`) would need a schema change — not done yet since
 it's cosmetic, not functional.
+
+## Driver auto-pages
+
+`/d/[driverId]` is a public page built the same way as `/r/[slug]` and
+`/standings/[classId]`: a `cache()`-wrapped data function
+(`apps/web/lib/driver-page.ts`) does one query joining `drivers` → `clubs`
+for identity, then `results` → `sessions` → `events` → `seasons` →
+`classes` filtered to `sessions.status = 'published'`, and derives
+wins/podiums/best-finish client-side from the row set rather than separate
+aggregate queries — cheap at this data scale and keeps the "one function,
+one round trip" pattern consistent with the rest of the public surface.
+Every results table across the public pages (`/r/[slug]`,
+`/standings/[classId]`) now links driver names to this page.
+
+## Result editing + audit trail
+
+Published results are not immutable — race control decisions get
+protested, timing mistakes get caught after the fact — but every change
+needs a paper trail, per the brief's general "don't silently mutate
+committed data" posture carried over from Phase 0.
+
+- **`result_edits` table**: one row per field-level change to a `results`
+  row, storing `previous_values`/`new_values` as `jsonb` snapshots (not a
+  column-by-column diff table) and a required `reason` string. `jsonb`
+  snapshots were chosen over per-field audit rows because the edit UI
+  always changes a row as a unit (a single "reason" covers everything
+  changed in one save), so a single audit row per edit matches how edits
+  actually happen and stays trivially easy to render as a history list.
+- **Write order**: `PATCH /api/results/[id]` writes the `result_edits` row
+  *before* updating `results` — under `neon-http` there's no transaction
+  support (same constraint noted for chunk 6's delete-then-insert), so the
+  two writes can't be atomic. Writing the audit row first means a crash
+  between the two writes leaves an orphaned-but-harmless audit record
+  instead of an unlogged silent mutation — the same reasoning already
+  applied to `sessions[id]/rows`.
+  `getResultWithClub` (added to `lib/ownership.ts`, mirroring the existing
+  `get*WithClub` helpers) walks `results → sessions → events → seasons →
+  clubs` for the ownership check, same pattern as everywhere else in the
+  admin API.
+- **Editor UI**: `PublishedResultsEditor` (rendered in the session upload
+  page only once `session.status === 'published'`) is a separate component
+  from `SessionUploadPreview` rather than a mode of it — the two have
+  different data sources (committed `results` rows via
+  `GET /api/sessions/[id]` vs. an in-memory parsed file) and different
+  save semantics (PATCH-per-changed-row with a required reason, vs. bulk
+  replace on initial commit), so sharing one component would mean
+  branching most of its internals on `session.status` for no real reuse.
+  Only position/status/laps/points-override are editable inline;
+  lap-time/gap fields are intentionally read-only here since correcting
+  timing data is a rarer, higher-stakes edit better done deliberately
+  (still possible via the same PATCH endpoint, just not exposed in this
+  table) than a click-to-edit cell.
+
+## Generic CSV parser + per-club column mapping
+
+Not every club runs Orbits. `source=generic_csv` sessions cover any other
+timing software's CSV export by having an admin map the file's own column
+headers to PaddockBoard's canonical fields by hand, once per club, instead
+of maintaining an alias table for formats nobody's documented.
+
+- **Shared parsing core**: orbits-csv and generic-csv only ever differed in
+  *how* a raw header resolves to a canonical field (a fixed alias table vs.
+  an admin-picked mapping) — everything downstream (decoding, duration
+  parsing, the DNF/DNS/DSQ status heuristic, warning generation) was
+  identical. Pulled that shared half out into `row-builder.ts` and
+  `duration.ts` at the `packages/parsers` root; `orbits-csv/parse.ts` and
+  the new `generic-csv/parse.ts` each just build a `Map<header,
+  ColumnResolution>` their own way and hand it to the same `buildRow`.
+  `CanonicalField` and `ColumnResolution` moved to `types.ts` as the shared
+  vocabulary both formats resolve into.
+- **Two-call parse API**: `readCsvHeaders(buffer)` reads just the header
+  row (Papa with `preview: 1`) so the UI can render a mapping form before
+  committing to a full parse; `parseGenericCsv(buffer, columnMapping)` does
+  the real parse once a mapping is chosen.  `parse()`'s signature grew an
+  options bag (`{ columnMapping }`) rather than a fifth positional
+  parameter that only one format uses.
+- **Per-club persistence, not per-session**: `clubs.csv_column_mapping`
+  (`jsonb`) stores the last-used mapping keyed by the *raw header string*.
+  `SessionUploadPreview` pre-fills the mapping form from it (exact header
+  match — a club whose software always exports identical column names
+  gets a zero-click mapping step after the first upload) and
+  `PATCH /api/clubs/[id]/csv-mapping` saves whatever mapping was just
+  used, so the club converges on "map once" rather than "map every
+  session." No mapping *history* is kept — only the most recent one,
+  since re-mapping after a genuine format change is expected and cheap.
+- **Required field**: the mapping UI won't let you continue without at
+  least one column mapped to driver name — every other field degrades
+  gracefully to a warning (same as orbits-csv), but a nameless row isn't
+  useful to anyone reviewing the preview table.

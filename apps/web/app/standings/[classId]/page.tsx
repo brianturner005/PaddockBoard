@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { getClassStandingsData } from "@/lib/standings";
 
 interface PageProps {
@@ -83,7 +84,9 @@ export default async function StandingsPage({ params }: PageProps) {
                     <PositionChange change={row.positionChange} />
                   </td>
                   <td className="py-2 pr-2">
-                    {row.driverName}
+                    <Link href={`/d/${row.driverId}`} className="underline">
+                      {row.driverName}
+                    </Link>
                     {row.driverNumber ? (
                       <span className="text-zinc-500 dark:text-zinc-400"> #{row.driverNumber}</span>
                     ) : null}

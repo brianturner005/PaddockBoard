@@ -4,6 +4,7 @@ import { db } from "@paddockboard/db";
 import { sessions, events, seasons, clubs, results, drivers, classes } from "@paddockboard/db/schema";
 
 export interface PublicResultRow {
+  driverId: string;
   position: number | null;
   driverName: string;
   driverNumber: string | null;
@@ -68,6 +69,7 @@ export const getPublicSessionData = cache(async (slug: string): Promise<PublicSe
       bestLapMs: results.bestLapMs,
       totalTimeMs: results.totalTimeMs,
       gapMs: results.gapMs,
+      driverId: drivers.id,
       driverName: drivers.displayName,
       driverNumber: drivers.number,
     })
@@ -84,6 +86,7 @@ export const getPublicSessionData = cache(async (slug: string): Promise<PublicSe
       classMap.set(row.classId, entry);
     }
     entry.rows.push({
+      driverId: row.driverId,
       position: row.position,
       driverName: row.driverName,
       driverNumber: row.driverNumber,

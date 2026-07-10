@@ -1,13 +1,7 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { getPublicSessionData } from "@/lib/public-session";
-
-function formatMs(ms: number | null): string {
-  if (ms === null) return "—";
-  const totalSeconds = ms / 1000;
-  const minutes = Math.floor(totalSeconds / 60);
-  const seconds = (totalSeconds % 60).toFixed(3);
-  return minutes > 0 ? `${minutes}:${seconds.padStart(6, "0")}` : seconds;
-}
+import { formatMs } from "@/lib/format";
 
 function formatGap(ms: number | null): string {
   if (ms === null) return "—";
@@ -103,7 +97,9 @@ export default async function PublicResultsPage({ params }: PageProps) {
                         {row.position ?? STATUS_LABELS[row.status] ?? "—"}
                       </td>
                       <td className="py-2 pr-2">
-                        {row.driverName}
+                        <Link href={`/d/${row.driverId}`} className="underline">
+                          {row.driverName}
+                        </Link>
                         {row.driverNumber ? (
                           <span className="text-zinc-500 dark:text-zinc-400"> #{row.driverNumber}</span>
                         ) : null}
