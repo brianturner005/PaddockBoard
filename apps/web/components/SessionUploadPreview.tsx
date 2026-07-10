@@ -3,16 +3,9 @@
 import { useState } from "react";
 import { parse, type ParsedRow, type ParseWarning, type ResultStatus } from "@paddockboard/parsers";
 import { buttonClass, inputClass, labelClass } from "./form-styles";
+import { formatMs } from "@/lib/format";
 
 const STATUS_OPTIONS: ResultStatus[] = ["finished", "dnf", "dns", "dsq", "unknown"];
-
-function formatMs(ms: number | undefined): string {
-  if (ms === undefined) return "—";
-  const totalSeconds = ms / 1000;
-  const minutes = Math.floor(totalSeconds / 60);
-  const seconds = (totalSeconds % 60).toFixed(3);
-  return minutes > 0 ? `${minutes}:${seconds.padStart(6, "0")}` : seconds;
-}
 
 function blankRow(): ParsedRow {
   return { position: null, driverName: "", status: "finished", rawRow: {} };

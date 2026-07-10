@@ -7,6 +7,7 @@ import { getCurrentUser } from "@/lib/auth";
 import { getSessionWithClub } from "@/lib/ownership";
 import { SessionUploadPreview } from "@/components/SessionUploadPreview";
 import { CountsForStandingsToggle } from "@/components/CountsForStandingsToggle";
+import { PublishedResultsEditor } from "@/components/PublishedResultsEditor";
 
 export default async function SessionUploadPage({
   params,
@@ -42,6 +43,16 @@ export default async function SessionUploadPage({
           <CountsForStandingsToggle sessionId={session.id} initialValue={session.countsForStandings} />
         </div>
       </div>
+
+      {session.status === "published" && (
+        <div>
+          <h2 className="text-lg font-semibold text-black dark:text-zinc-50">Edit published results</h2>
+          <p className="mb-3 text-sm text-zinc-600 dark:text-zinc-400">
+            Changes here are logged with a reason and visible in each row&rsquo;s history.
+          </p>
+          <PublishedResultsEditor sessionId={session.id} />
+        </div>
+      )}
 
       <SessionUploadPreview
         sessionId={session.id}

@@ -39,9 +39,14 @@ Progress:
   in the admin UI (`/admin/clubs/[clubId]/points-scheme`)
 - [x] Standings page (`/standings/[classId]`) — recomputed per request,
   with ↑/↓ position-change indicators since the last scored round
-- [ ] Result editing + audit trail
-- [ ] Driver auto-pages
-- [ ] Manual entry grid (standalone, not just inside the upload flow)
+- [x] Result editing + audit trail — `PublishedResultsEditor` lets club
+  admins correct committed results on a published session; every change
+  requires a reason and is logged to `result_edits` (previous/new value
+  snapshots), viewable per-row via a "History" toggle
+- [x] Driver auto-pages (`/d/[driverId]`) — wins/podiums/best finish plus a
+  full results history, linked from every public results and standings
+  table
+- [x] Manual entry grid — turned out to already work from Phase 0: `source=manual` sessions open `SessionUploadPreview` straight to an empty editable table (no file step), so it's the same class-picker/save/publish flow, just without a parse step first
 - [ ] Generic CSV parser + per-club column mapping
 
 ## Stack

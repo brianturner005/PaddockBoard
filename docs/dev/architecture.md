@@ -167,3 +167,55 @@ fewer round.
 `/standings/[classId]` works but isn't a pretty URL. A short slug (like
 sessions' `public_slug`) would need a schema change — not done yet since
 it's cosmetic, not functional.
+
+## Driver auto-pages
+
+`/d/[driverId]` is a public page built the same way as `/r/[slug]` and
+`/standings/[classId]`: a `cache()`-wrapped data function
+(`apps/web/lib/driver-page.ts`) does one query joining `drivers` → `clubs`
+for identity, then `results` → `sessions` → `events` → `seasons` →
+`classes` filtered to `sessions.status = 'published'`, and derives
+wins/podiums/best-finish client-side from the row set rather than separate
+aggregate queries — cheap at this data scale and keeps the "one function,
+one round trip" pattern consistent with the rest of the public surface.
+Every results table across the public pages (`/r/[slug]`,
+`/standings/[classId]`) now links driver names to this page.
+
+## Result editing + audit trail
+
+Published results are not immutable — race control decisions get
+protested, timing mistakes get caught after the fact — but every change
+needs a paper trail, per the brief's general "don't silently mutate
+committed data" posture carried over from Phase 0.
+
+- **`result_edits` table**: one row per field-level change to a `results`
+  row, storing `previous_values`/`new_values` as `jsonb` snapshots (not a
+  column-by-column diff table) and a required `reason` string. `jsonb`
+  snapshots were chosen over per-field audit rows because the edit UI
+  always changes a row as a unit (a single "reason" covers everything
+  changed in one save), so a single audit row per edit matches how edits
+  actually happen and stays trivially easy to render as a history list.
+- **Write order**: `PATCH /api/results/[id]` writes the `result_edits` row
+  *before* updating `results` — under `neon-http` there's no transaction
+  support (same constraint noted for chunk 6's delete-then-insert), so the
+  two writes can't be atomic. Writing the audit row first means a crash
+  between the two writes leaves an orphaned-but-harmless audit record
+  instead of an unlogged silent mutation — the same reasoning already
+  applied to `sessions[id]/rows`.
+  `getResultWithClub` (added to `lib/ownership.ts`, mirroring the existing
+  `get*WithClub` helpers) walks `results → sessions → events → seasons →
+  clubs` for the ownership check, same pattern as everywhere else in the
+  admin API.
+- **Editor UI**: `PublishedResultsEditor` (rendered in the session upload
+  page only once `session.status === 'published'`) is a separate component
+  from `SessionUploadPreview` rather than a mode of it — the two have
+  different data sources (committed `results` rows via
+  `GET /api/sessions/[id]` vs. an in-memory parsed file) and different
+  save semantics (PATCH-per-changed-row with a required reason, vs. bulk
+  replace on initial commit), so sharing one component would mean
+  branching most of its internals on `session.status` for no real reuse.
+  Only position/status/laps/points-override are editable inline;
+  lap-time/gap fields are intentionally read-only here since correcting
+  timing data is a rarer, higher-stakes edit better done deliberately
+  (still possible via the same PATCH endpoint, just not exposed in this
+  table) than a click-to-edit cell.

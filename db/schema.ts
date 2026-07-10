@@ -135,3 +135,26 @@ export const results = pgTable(
   },
   (table) => [index("idx_results_session").on(table.sessionId)]
 );
+
+// Audit trail for edits to already-committed results (penalties applied
+// post-session, steward decisions, etc). Written before the results row is
+// updated -- no transaction wrapper (neon-http doesn't support one), so a
+// crash mid-edit leaves an audit record with no matching update rather than
+// silently losing the record of what changed.
+export const resultEdits = pgTable(
+  "result_edits",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    resultId: uuid("result_id")
+      .notNull()
+      .references(() => results.id),
+    editedByUserId: uuid("edited_by_user_id")
+      .notNull()
+      .references(() => users.id),
+    reason: text("reason").notNull(),
+    previousValues: jsonb("previous_values").notNull(),
+    newValues: jsonb("new_values").notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [index("idx_result_edits_result").on(table.resultId)]
+);

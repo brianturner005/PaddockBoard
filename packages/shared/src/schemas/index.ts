@@ -6,3 +6,4 @@ export * from "./event";
 export * from "./session";
 export * from "./result";
 export * from "./points-scheme";
+export * from "./result-edit";
