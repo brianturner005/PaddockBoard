@@ -14,8 +14,8 @@ landing page carries the pitch for non-technical visitors.
 
 ## Status
 
-**Phase 0 (skeleton) in progress.** Goal: one club, one uploaded file, one
-public results page you'd happily text to someone. See
+**Phase 0 (skeleton) complete** as of chunk 7 — one club, one uploaded
+file, one public results page you'd happily text to someone. See
 [`docs/dev/architecture.md`](docs/dev/architecture.md) for design notes and
 Phase 1+ seams as they're written.
 
@@ -27,9 +27,9 @@ Progress:
 - [x] Chunk 4 — Orbits CSV parser package
 - [x] Chunk 5 — upload + client-side parse + preview UI
 - [x] Chunk 6 — commit rows + publish flow
-- [ ] Chunk 7 — public results page
-- [x] Chunk 8 — demo seed data (Blue Ridge Kart Club) — built ahead of chunk 7 to populate the admin UI early; the public `/r/blue-ridge-demo` link isn't live until chunk 7 lands
-- [x] Chunk 9 — landing page + docs pass — built ahead of chunk 7 at the user's request; GitHub Pages still needs to be enabled in repo settings (Settings → Pages → `main` / `/docs`)
+- [x] Chunk 7 — public results page (`/r/[slug]`) — **completes Phase 0's definition of done**
+- [x] Chunk 8 — demo seed data (Blue Ridge Kart Club)
+- [x] Chunk 9 — landing page + docs pass — GitHub Pages still needs to be enabled in repo settings (Settings → Pages → `main` / `/docs`)
 
 ## Stack
 
@@ -120,8 +120,8 @@ provenance of each fixture and what to do when a real one shows up.
 full season, a published feature-final session (mixed finishing order,
 a lapped car, two DNFs), and 14 drivers under whatever account
 `SEED_OWNER_EMAIL` resolves to. Idempotent — re-running replaces the demo
-club's data rather than duplicating it. The public results link
-(`/r/blue-ridge-demo`) goes live once chunk 7 (public results page) lands.
+club's data rather than duplicating it. Public results:
+[paddock-board-web.vercel.app/r/blue-ridge-demo](https://paddock-board-web.vercel.app/r/blue-ridge-demo).
 
 ## Landing page
 
