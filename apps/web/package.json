@@ -13,6 +13,7 @@
     "@paddockboard/db": "*",
     "@paddockboard/parsers": "*",
     "@paddockboard/shared": "*",
+    "@paddockboard/standings": "*",
     "@vercel/blob": "^2.6.1",
     "jose": "^6.2.3",
     "nanoid": "^5.1.16",

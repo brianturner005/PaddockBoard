@@ -31,6 +31,7 @@ export async function POST(request: NextRequest) {
       name: parsed.data.name,
       source: parsed.data.source,
       publicSlug: nanoid(10),
+      countsForStandings: parsed.data.type === "final" || parsed.data.type === "feature",
     })
     .returning();
 

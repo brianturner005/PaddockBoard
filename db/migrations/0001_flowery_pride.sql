@@ -1,0 +1,1 @@
+ALTER TABLE "sessions" ADD COLUMN "counts_for_standings" boolean DEFAULT false NOT NULL;

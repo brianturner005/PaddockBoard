@@ -8,6 +8,13 @@
       "when": 1783633602216,
       "tag": "0000_sudden_rick_jones",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1783685530816,
+      "tag": "0001_flowery_pride",
+      "breakpoints": true
     }
   ]
 }
