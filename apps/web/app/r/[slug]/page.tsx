@@ -64,7 +64,10 @@ export default async function PublicResultsPage({ params }: PageProps) {
     <div className="mx-auto max-w-2xl px-6 py-10">
       <header className="mb-8">
         <p className="text-sm text-zinc-600 dark:text-zinc-400">
-          {data.clubName} · {data.seasonName}
+          <Link href={`/c/${data.clubSlug}`} className="underline">
+            {data.clubName}
+          </Link>{" "}
+          · {data.seasonName}
         </p>
         <h1 className="mt-1 text-2xl font-semibold text-black dark:text-zinc-50">{data.sessionName}</h1>
         <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">

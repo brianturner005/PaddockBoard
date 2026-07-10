@@ -67,12 +67,20 @@ Progress:
   results-grid HTML export the same way as the CSV export (same column
   alias table), closing out the last Phase 0-era parser gap
 
-**Phase 3 (multi-class sessions) in progress.**
+**Phase 3 (multi-class sessions) complete.**
 
 - [x] Per-row class assignment — a session's results table can now split
   across multiple classes (e.g. two kart classes sharing track time). Each
   row gets its own class picker, defaulted from a parsed `Class` column
   (Orbits CSV/HTML) or a generic-CSV mapping, editable per row before save
+
+**Phase 4 (public discovery) in progress.**
+
+- [x] Public club/event discovery — the homepage now lists every club
+  (`/c/[slug]`), and each club page lists its seasons, classes, and
+  published events/sessions. Club names on results/standings/driver pages
+  link back to their club page, so browsing works both from the homepage
+  down and from a shared results link back out
 
 ## Stack
 
