@@ -32,6 +32,29 @@ export async function verifyMagicLinkToken(token: string): Promise<string> {
   return payload.email;
 }
 
+// Same shape as the sign-in magic link, but scoped to one driver: proves
+// "I control this email address," not "I am this driver" -- the same
+// low-friction trust model as the rest of auth, just claim-flavored.
+export async function createDriverClaimToken(email: string, driverId: string): Promise<string> {
+  return new SignJWT({ email, driverId, purpose: "claim-driver" })
+    .setProtectedHeader({ alg: "HS256" })
+    .setIssuedAt()
+    .setExpirationTime(`${MAGIC_LINK_TTL_SECONDS}s`)
+    .sign(getSecretKey());
+}
+
+export async function verifyDriverClaimToken(token: string): Promise<{ email: string; driverId: string }> {
+  const { payload } = await jwtVerify(token, getSecretKey());
+  if (
+    payload.purpose !== "claim-driver" ||
+    typeof payload.email !== "string" ||
+    typeof payload.driverId !== "string"
+  ) {
+    throw new Error("Invalid claim token");
+  }
+  return { email: payload.email, driverId: payload.driverId };
+}
+
 export interface SessionUser {
   id: string;
   email: string;

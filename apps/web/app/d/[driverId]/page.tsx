@@ -2,9 +2,12 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { getDriverPageData } from "@/lib/driver-page";
 import { formatMs } from "@/lib/format";
+import { getCurrentUser } from "@/lib/auth";
+import { ClaimDriverForm } from "@/components/ClaimDriverForm";
 
 interface PageProps {
   params: Promise<{ driverId: string }>;
+  searchParams: Promise<{ claim?: string }>;
 }
 
 const STATUS_LABELS: Record<string, string> = {
@@ -27,9 +30,10 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   };
 }
 
-export default async function DriverPage({ params }: PageProps) {
+export default async function DriverPage({ params, searchParams }: PageProps) {
   const { driverId } = await params;
-  const result = await getDriverPageData(driverId);
+  const { claim } = await searchParams;
+  const [result, currentUser] = await Promise.all([getDriverPageData(driverId), getCurrentUser()]);
 
   if (result.status === "not_found") {
     return (
@@ -67,6 +71,31 @@ export default async function DriverPage({ params }: PageProps) {
           </span>
         </div>
       </header>
+
+      {claim === "success" && data.claimedUserId === currentUser?.id && (
+        <p className="mb-6 text-sm text-green-700 dark:text-green-400">
+          This profile is now linked to your account.
+        </p>
+      )}
+      {claim === "taken" && (
+        <p className="mb-6 text-sm text-red-600">
+          This profile was already claimed before your confirmation went through.
+        </p>
+      )}
+
+      {data.claimedUserId && data.claimedUserId === currentUser?.id ? (
+        <p className="mb-8 text-sm text-zinc-600 dark:text-zinc-400">
+          This is your profile.{" "}
+          <Link href="/my/drivers" className="underline">
+            See all your claimed profiles
+          </Link>
+          .
+        </p>
+      ) : !data.claimedUserId ? (
+        <div className="mb-8">
+          <ClaimDriverForm driverId={data.driverId} />
+        </div>
+      ) : null}
 
       {data.results.length === 0 ? (
         <p className="text-sm text-zinc-600 dark:text-zinc-400">No published results yet.</p>

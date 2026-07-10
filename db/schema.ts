@@ -140,17 +140,21 @@ export const sessions = pgTable(
   (table) => [index("idx_sessions_event").on(table.eventId)]
 );
 
-export const drivers = pgTable("drivers", {
-  id: uuid("id").primaryKey().defaultRandom(),
-  clubId: uuid("club_id")
-    .notNull()
-    .references(() => clubs.id),
-  displayName: text("display_name").notNull(),
-  number: text("number"),
-  transponderIds: jsonb("transponder_ids").$type<string[]>().notNull().default([]),
-  claimedUserId: uuid("claimed_user_id").references(() => users.id),
-  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
-});
+export const drivers = pgTable(
+  "drivers",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    clubId: uuid("club_id")
+      .notNull()
+      .references(() => clubs.id),
+    displayName: text("display_name").notNull(),
+    number: text("number"),
+    transponderIds: jsonb("transponder_ids").$type<string[]>().notNull().default([]),
+    claimedUserId: uuid("claimed_user_id").references(() => users.id),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [index("idx_drivers_claimed_user").on(table.claimedUserId)]
+);
 
 export const results = pgTable(
   "results",

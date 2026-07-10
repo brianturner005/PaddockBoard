@@ -299,3 +299,65 @@ than one person managing it.
   and rejects with 400 if that would hit zero — otherwise a club could be
   locked out of its own membership management entirely, with no path back
   in short of a manual DB fix.
+
+## Driver claiming
+
+`drivers.claimed_user_id` existed since Phase 0 as a seam, always `NULL`.
+Second Phase 2 chunk: drivers can now claim their own profile.
+
+- **A second, narrower magic-link flow**, not a repurposing of the sign-in
+  one. `createDriverClaimToken(email, driverId)` / `verifyDriverClaimToken`
+  (`lib/auth.ts`) mirror `createMagicLinkToken`/`verifyMagicLinkToken`
+  exactly, but the JWT payload also carries `driverId` and
+  `purpose: "claim-driver"` — so a claim link is bound to one specific
+  driver and can't be replayed to claim a different one, and can't be
+  confused with a plain sign-in link even if intercepted.
+- **What claiming actually proves.** Entering an email on `/d/[driverId]`
+  and clicking the emailed link proves "I control this email address," not
+  "I am this driver" — the same low-friction trust model the rest of auth
+  already uses (no ID verification anywhere in this app). Acceptable for a
+  volunteer club-racing results site; stated explicitly here so it's a
+  documented tradeoff, not an oversight.
+- **Race handled, not prevented.** Two people could both request a claim
+  link for the same unclaimed driver before either clicks through.
+  `GET /api/auth/claim-callback` re-checks `claimed_user_id` at the moment
+  the link is clicked (not just at request time) and rejects a second
+  claimant with a `?claim=taken` redirect rather than silently
+  overwriting the first claimant's link.
+- **Claiming also signs the user in** (`createSession`) — one email round
+  trip does both jobs, since a driver claiming their profile has no
+  existing account to fall back to logging into separately.
+- **`/my/drivers`** lists every `drivers` row with `claimed_user_id`
+  matching the current user, across every club — a single user can claim
+  driver profiles at more than one club, since `drivers` is club-scoped
+  but `users`/sessions are not.
+- Added `idx_drivers_claimed_user` since `/my/drivers` filters by it.
+
+## Orbits HTML parser
+
+Third Phase 2 chunk, closing out the last item from Phase 0's original
+task breakdown: `source=orbits_html` sessions now have a real parser.
+
+- **No real HTML export sample was found**, and native HTML export isn't
+  clearly documented for Orbits 4/5 at all (see the updated
+  `docs/dev/formats.md`) — only that some installs commonly print/save the
+  results grid to HTML. Rather than invent a separate column vocabulary,
+  `orbits-html/parse.ts` assumes the export carries the same columns as
+  the documented CSV export and **reuses the CSV parser's exact alias
+  table** (`resolveColumn` from `orbits-csv/columns.ts`) — maximal reuse
+  of a decision already made, not a new one.
+- **Regex-based table extraction, not a DOM parser.** Adding `DOMParser`
+  usage would mean either a browser-only code path (breaks the Node-side
+  Vitest tests, same problem `iconv-lite` caused for encoding) or a jsdom
+  dependency just for parsing. A narrow regex extractor (find the first
+  `<table>`, split into `<tr>`, split into `<th>`/`<td>`, strip tags,
+  decode a handful of common entities) stays zero-dependency and runs
+  identically in the browser and in Vitest under plain Node — same
+  reasoning as the CSV parser's `iconv-lite` avoidance, applied to a new
+  problem. Trade-off stated plainly: it doesn't handle colspan/rowspan,
+  multiple tables, or deeply nested markup, and doesn't try to.
+- Otherwise identical downstream to `orbits-csv` — same `buildRow`, same
+  DNF/DNS/DSQ heuristic, same warnings shape. `SessionUploadPreview`
+  treats `orbits_html` the same as `orbits_csv` (immediate parse on
+  upload, no mapping step) since, unlike `generic_csv`, the column
+  vocabulary is assumed known up front.

@@ -25,7 +25,7 @@ export interface ParsedSession {
   encoding: string;
 }
 
-export type SupportedFormat = "orbits_csv" | "generic_csv";
+export type SupportedFormat = "orbits_csv" | "orbits_html" | "generic_csv";
 
 export type CanonicalField =
   | "position"
