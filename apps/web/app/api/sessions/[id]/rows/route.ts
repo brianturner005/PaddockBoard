@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { eq } from "drizzle-orm";
+import { eq, inArray } from "drizzle-orm";
 import { commitRowsSchema } from "@paddockboard/shared";
 import { db } from "@paddockboard/db";
 import { classes, results } from "@paddockboard/db/schema";
@@ -26,10 +26,17 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 });
   }
 
-  const [cls] = await db.select().from(classes).where(eq(classes.id, parsed.data.classId)).limit(1);
-  if (!cls || cls.seasonId !== result.season.id) {
+  const distinctClassIds = [...new Set(parsed.data.rows.map((r) => r.classId))];
+  const matchingClasses = await db
+    .select()
+    .from(classes)
+    .where(inArray(classes.id, distinctClassIds));
+  const validClassIds = new Set(
+    matchingClasses.filter((c) => c.seasonId === result.season.id).map((c) => c.id)
+  );
+  if (validClassIds.size !== distinctClassIds.length) {
     return NextResponse.json(
-      { error: "Class does not belong to this session's season" },
+      { error: "One or more rows have a class that doesn't belong to this session's season" },
       { status: 400 }
     );
   }
@@ -51,7 +58,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     rowsToInsert.push({
       sessionId: id,
       driverId,
-      classId: parsed.data.classId,
+      classId: row.classId,
       position: row.position,
       status: row.status,
       laps: row.laps,

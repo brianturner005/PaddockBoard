@@ -11,6 +11,7 @@ const FIELD_LABELS: Record<CanonicalField, string> = {
   totalTimeMs: "Total time",
   bestLapMs: "Best lap time",
   gapMs: "Gap to leader",
+  className: "Class",
 };
 
 export function GenericCsvColumnMapper({

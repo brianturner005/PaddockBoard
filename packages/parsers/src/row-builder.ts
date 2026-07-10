@@ -151,6 +151,7 @@ export function buildRow(
     totalTimeMs,
     gapMs,
     status,
+    className: values.className?.trim() || undefined,
     rawRow,
   };
 }

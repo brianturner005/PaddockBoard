@@ -9,6 +9,11 @@ export interface ParsedRow {
   totalTimeMs?: number;
   gapMs?: number;
   status: ResultStatus;
+  // Free-text class name straight from the file, if the file has one (e.g.
+  // Orbits' "Class" column). Not validated against a club's real classes --
+  // that's an app-layer concern (a raw string like "Sportsman" has to be
+  // matched to an actual class record), the parser just surfaces the hint.
+  className?: string;
   rawRow: Record<string, string>;
 }
 
@@ -34,7 +39,8 @@ export type CanonicalField =
   | "laps"
   | "totalTimeMs"
   | "bestLapMs"
-  | "gapMs";
+  | "gapMs"
+  | "className";
 
 export const CANONICAL_FIELDS: CanonicalField[] = [
   "position",
@@ -44,6 +50,7 @@ export const CANONICAL_FIELDS: CanonicalField[] = [
   "totalTimeMs",
   "bestLapMs",
   "gapMs",
+  "className",
 ];
 
 // A raw CSV header resolves to a canonical field, to "known but not modeled

@@ -33,6 +33,7 @@ describe("parseOrbitsCsv", () => {
     expect(first.bestLapMs).toBe(ms(0, 0, 54.201));
     expect(first.gapMs).toBeUndefined();
     expect(first.status).toBe("finished");
+    expect(first.className).toBe("Senior");
 
     const second = result.rows[1];
     expect(second.gapMs).toBe(ms(0, 0, 2.454));
@@ -64,6 +65,7 @@ describe("parseOrbitsCsv", () => {
     const dsq = result.rows[4];
     expect(dsq.status).toBe("dsq");
     expect(dsq.driverName).toBe("Morgan Diaz");
+    expect(dsq.className).toBe("Junior");
 
     const finisher = result.rows[0];
     expect(finisher.status).toBe("finished");
@@ -105,6 +107,7 @@ describe("parseOrbitsCsv", () => {
     expect(row.bestLapMs).toBeUndefined();
     expect(row.gapMs).toBeUndefined();
     expect(row.status).toBe("finished"); // position parsed fine
+    expect(row.className).toBeUndefined(); // no Class column in this file
     expect(result.warnings.length).toBeGreaterThan(0);
     expect(row.rawRow["Total Time"]).toBe("not-a-time");
   });

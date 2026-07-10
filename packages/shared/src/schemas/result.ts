@@ -14,10 +14,10 @@ export const commitRowSchema = z.object({
   totalTimeMs: z.number().int().positive().optional(),
   gapMs: z.number().int().optional(),
   status: committableStatusSchema,
+  classId: z.string().uuid(),
 });
 
 export const commitRowsSchema = z.object({
-  classId: z.string().uuid(),
   rows: z.array(commitRowSchema).min(1),
 });
 

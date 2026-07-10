@@ -9,7 +9,7 @@ import {
   type ParseWarning,
   type ResultStatus,
 } from "@paddockboard/parsers";
-import { buttonClass, inputClass, labelClass } from "./form-styles";
+import { buttonClass, inputClass } from "./form-styles";
 import { GenericCsvColumnMapper } from "./GenericCsvColumnMapper";
 import { formatMs } from "@/lib/format";
 
@@ -53,7 +53,10 @@ export function SessionUploadPreview({
   const [csvHeaders, setCsvHeaders] = useState<string[]>([]);
   const [columnMapping, setColumnMapping] = useState<Record<string, CanonicalField | "">>({});
 
-  const [classId, setClassId] = useState(classes[0]?.id ?? "");
+  // Parallel to `rows` (same index), not part of ParsedRow -- the parser
+  // package only knows a raw className hint from the file, matching that
+  // hint to a real class record is an app-level concern.
+  const [rowClassIds, setRowClassIds] = useState<string[]>([]);
   const [saveState, setSaveState] = useState<"idle" | "saving" | "saved" | "error">("idle");
   const [saveError, setSaveError] = useState<string | null>(null);
 
@@ -61,6 +64,15 @@ export function SessionUploadPreview({
   const [publishState, setPublishState] = useState<"idle" | "publishing" | "error">("idle");
 
   const hasUnknownStatus = rows.some((row) => row.status === "unknown");
+  const hasMissingClass = classes.length > 0 && rowClassIds.some((id) => !id);
+
+  function defaultClassIdFor(row: ParsedRow): string {
+    if (row.className) {
+      const match = classes.find((c) => c.name.toLowerCase() === row.className!.trim().toLowerCase());
+      if (match) return match.id;
+    }
+    return classes[0]?.id ?? "";
+  }
 
   async function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
@@ -103,6 +115,7 @@ export function SessionUploadPreview({
 
       const result = parse(buffer, source === "orbits_html" ? "orbits_html" : "orbits_csv");
       setRows(result.rows);
+      setRowClassIds(result.rows.map(defaultClassIdFor));
       setWarnings(result.warnings);
       setUnrecognizedColumns(result.unrecognizedColumns);
       setPhase("ready");
@@ -127,6 +140,7 @@ export function SessionUploadPreview({
     try {
       const result = parse(fileBuffer, "generic_csv", { columnMapping: mapping });
       setRows(result.rows);
+      setRowClassIds(result.rows.map(defaultClassIdFor));
       setWarnings(result.warnings);
       setUnrecognizedColumns(result.unrecognizedColumns);
       setPhase("ready");
@@ -147,8 +161,13 @@ export function SessionUploadPreview({
     setRows((prev) => prev.map((row, i) => (i === index ? { ...row, ...patch } : row)));
   }
 
+  function updateRowClass(index: number, classIdValue: string) {
+    setRowClassIds((prev) => prev.map((id, i) => (i === index ? classIdValue : id)));
+  }
+
   function removeRow(index: number) {
     setRows((prev) => prev.filter((_, i) => i !== index));
+    setRowClassIds((prev) => prev.filter((_, i) => i !== index));
   }
 
   async function handleSave() {
@@ -159,8 +178,7 @@ export function SessionUploadPreview({
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        classId,
-        rows: rows.map((row) => ({
+        rows: rows.map((row, i) => ({
           position: row.position,
           driverName: row.driverName,
           driverNumber: row.driverNumber,
@@ -169,6 +187,7 @@ export function SessionUploadPreview({
           totalTimeMs: row.totalTimeMs,
           gapMs: row.gapMs,
           status: row.status,
+          classId: rowClassIds[i],
         })),
       }),
     });
@@ -260,6 +279,7 @@ export function SessionUploadPreview({
                   <th className="py-1 pr-2">Total time</th>
                   <th className="py-1 pr-2">Best lap</th>
                   <th className="py-1 pr-2">Status</th>
+                  <th className="py-1 pr-2">Class</th>
                   <th></th>
                 </tr>
               </thead>
@@ -327,6 +347,20 @@ export function SessionUploadPreview({
                         ))}
                       </select>
                     </td>
+                    <td className="py-1 pr-2">
+                      <select
+                        value={rowClassIds[index] ?? ""}
+                        onChange={(e) => updateRowClass(index, e.target.value)}
+                        className={inputClass}
+                      >
+                        {classes.length === 0 && <option value="">No classes yet</option>}
+                        {classes.map((c) => (
+                          <option key={c.id} value={c.id}>
+                            {c.name}
+                          </option>
+                        ))}
+                      </select>
+                    </td>
                     <td className="py-1">
                       <button
                         type="button"
@@ -343,32 +377,20 @@ export function SessionUploadPreview({
           </div>
           <button
             type="button"
-            onClick={() => setRows((prev) => [...prev, blankRow()])}
+            onClick={() => {
+              setRows((prev) => [...prev, blankRow()]);
+              setRowClassIds((prev) => [...prev, classes[0]?.id ?? ""]);
+            }}
             className={`mt-3 ${buttonClass}`}
           >
             + Add row manually
           </button>
 
           <div className="mt-6 flex flex-col gap-3 border-t border-zinc-200 pt-6 dark:border-zinc-800">
-            {classes.length === 0 ? (
+            {classes.length === 0 && (
               <p className="text-sm text-red-600">
                 This season has no classes yet — create one before saving results.
               </p>
-            ) : (
-              <label className={labelClass}>
-                Class
-                <select
-                  value={classId}
-                  onChange={(e) => setClassId(e.target.value)}
-                  className={`max-w-xs ${inputClass}`}
-                >
-                  {classes.map((c) => (
-                    <option key={c.id} value={c.id}>
-                      {c.name}
-                    </option>
-                  ))}
-                </select>
-              </label>
             )}
 
             {hasUnknownStatus && (
@@ -377,12 +399,22 @@ export function SessionUploadPreview({
               </p>
             )}
 
+            {hasMissingClass && (
+              <p className="text-sm text-red-600">
+                Some rows have no class assigned — pick one for each row before saving.
+              </p>
+            )}
+
             <div className="flex items-center gap-3">
               <button
                 type="button"
                 onClick={handleSave}
                 disabled={
-                  saveState === "saving" || rows.length === 0 || !classId || hasUnknownStatus
+                  saveState === "saving" ||
+                  rows.length === 0 ||
+                  classes.length === 0 ||
+                  hasUnknownStatus ||
+                  hasMissingClass
                 }
                 className={buttonClass}
               >

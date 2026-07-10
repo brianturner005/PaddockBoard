@@ -361,3 +361,51 @@ task breakdown: `source=orbits_html` sessions now have a real parser.
   treats `orbits_html` the same as `orbits_csv` (immediate parse on
   upload, no mapping step) since, unlike `generic_csv`, the column
   vocabulary is assumed known up front.
+
+# Phase 3
+
+## Per-row class assignment
+
+Karting sessions commonly run multiple classes on track together in one
+race — flagged as an open seam since chunk 6 (`results.class_id` was
+always a per-row FK, but the commit flow only ever wrote one `classId` for
+every row in a session, since there was nowhere for a per-row class hint
+to come from yet).
+
+- **`className` is now a canonical field**, not just a recognized-but-
+  unmodeled column. Orbits' `Class` header (documented in
+  `docs/dev/formats.md`) now maps to it instead of `known_unmodeled`;
+  `orbits-html` gets this for free by reusing the same alias table.
+  Generic CSV mapping gained a "Class" option. The field is optional and
+  free-text — the parser makes no claim about what values are valid, it
+  just surfaces whatever string was in the file (`ParsedRow.className`).
+- **Matching a free-text hint to a real class is an app-layer job, not a
+  parser job.** `packages/parsers` has no concept of a club's actual
+  `classes` rows, so `SessionUploadPreview` does the matching itself:
+  after parsing, each row gets a default `classId` via a case-insensitive
+  exact match of `row.className` against the season's classes, falling
+  back to the season's first class if there's no match or no hint at all
+  (preserves today's single-class-session behavior for files/manual entry
+  with no class data). This lives in a `rowClassIds` array parallel to
+  `rows`, not on `ParsedRow` itself, to keep the parser package's types
+  free of an app-specific "class" concept — the same separation already
+  used for the audit trail and column-mapping features.
+  The table's per-row "Class" `<select>` lets an admin override any row's
+  default before saving; the removed session-level "Class" picker is gone
+  entirely, not just hidden, since defaulting per row makes a single
+  session-wide choice redundant rather than a fallback.
+- **`commitRowsSchema` moved `classId` from the request's top level onto
+  each row.** `POST /api/sessions/[id]/rows` now validates that every
+  *distinct* classId used across the submitted rows belongs to the
+  session's season in one `inArray` query, rejecting the whole commit if
+  any row's class doesn't belong — same all-or-nothing replace-on-commit
+  semantics as before, just checked across a set instead of a single id.
+  No schema/migration was needed for this chunk: `results.class_id` was
+  already a mandatory per-row column since Phase 0, this only changes
+  which value the app sends for it.
+- Public pages needed no changes — `getPublicSessionData`
+  (`apps/web/lib/public-session.ts`) already grouped results by `classId`
+  per row (documented back in the chunk 7 notes as "the correct shape for
+  the domain model regardless" of what the write side did at the time),
+  so a session with rows split across multiple classes was already going
+  to render correctly on `/r/[slug]`.
