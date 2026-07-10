@@ -409,3 +409,44 @@ to come from yet).
   the domain model regardless" of what the write side did at the time),
   so a session with rows split across multiple classes was already going
   to render correctly on `/r/[slug]`.
+
+# Phase 4
+
+## Public club/event discovery
+
+Every public page so far (`/r/[slug]`, `/standings/[classId]`,
+`/d/[driverId]`) needed a direct, previously-shared link to reach — there
+was no way to *find* a club's results without already having one. This
+chunk adds a browsable path in from the homepage.
+
+- **`apps/web/lib/public-club.ts`** (`getPublicClubData(slug)`,
+  `getPublicClubDirectory()`) follows the same shape as
+  `public-session.ts`/`standings.ts`: a `cache()`-wrapped function
+  returning a discriminated `not_found | ok` result, one round trip per
+  concern. Fetches seasons, classes, and events+published-sessions for a
+  club with three `inArray`-scoped queries (not N+1 per season) and
+  assembles the tree in JS with `Map`s — same grouping pattern used for
+  per-class results grouping in `public-session.ts`.
+- **An event only appears once it has at least one published session.**
+  Seasons/classes/events aren't gated behind a `status` the way sessions
+  are, so without this filter a freshly-created, still-being-set-up event
+  would show up on the public page with nothing to click — worse than not
+  listing it at all. Classes are still always listed (linking to
+  `/standings/[classId]`, which already has its own graceful empty state)
+  since an admin creates classes up front, before any results exist, and
+  a class with no scored rounds yet is a legitimate, not-broken state.
+- **`/` (homepage) became a dynamic route.** It was a static marketing
+  page since Phase 0 (`○` in the build output); adding a club directory
+  means it now reads from the DB, so `export const dynamic =
+  "force-dynamic"` was required — without it, `next build` tries to
+  statically prerender `/` at build time and fails outright, since a
+  build machine doesn't have a live `DATABASE_URL` connection the way a
+  request-time Vercel function does. Caught this the same way the lazy-DB-
+  client bug was caught in chunk 5/6: running the build and reading the
+  actual error rather than assuming a page without a dynamic route segment
+  is automatically request-time.
+- Club name in the header of `/r/[slug]`, `/standings/[classId]`, and
+  `/d/[driverId]` is now a link to `/c/[slug]` (all three payloads already
+  carried `clubSlug`) — the discovery path also works "outward" from a
+  results page back up to everything else that club has published, not
+  just "inward" from the homepage down.
