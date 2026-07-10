@@ -53,7 +53,7 @@ Progress:
   (`clubs.csv_column_mapping`) and pre-filled on the next upload of the
   same format
 
-**Phase 2 (multi-club, driver self-service) in progress.**
+**Phase 2 (multi-club, driver self-service) complete.**
 
 - [x] Multi-user club access — a club can now have more than one admin.
   `club_members` (roles: `owner`, `editor`) is the access-control source of
@@ -66,6 +66,13 @@ Progress:
 - [x] Orbits HTML parser — `source=orbits_html` sessions parse an Orbits
   results-grid HTML export the same way as the CSV export (same column
   alias table), closing out the last Phase 0-era parser gap
+
+**Phase 3 (multi-class sessions) in progress.**
+
+- [x] Per-row class assignment — a session's results table can now split
+  across multiple classes (e.g. two kart classes sharing track time). Each
+  row gets its own class picker, defaulted from a parsed `Class` column
+  (Orbits CSV/HTML) or a generic-CSV mapping, editable per row before save
 
 ## Stack
 

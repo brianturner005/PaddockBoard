@@ -78,4 +78,16 @@ describe("parseGenericCsv", () => {
   it("throws only on truly unparseable input (empty file)", () => {
     expect(() => parseGenericCsv(new ArrayBuffer(0), mapping)).toThrow();
   });
+
+  it("maps a class-like column to className when the admin picks it", () => {
+    const csvWithGroup = "Finish,Racer,Group\n1,Sam Ortiz,Heavy\n2,Jess Kwan,Light\n";
+    const result = parseGenericCsv(toBuffer(csvWithGroup), {
+      Finish: "position",
+      Racer: "driverName",
+      Group: "className",
+    });
+
+    expect(result.rows[0].className).toBe("Heavy");
+    expect(result.rows[1].className).toBe("Light");
+  });
 });

@@ -12,11 +12,12 @@ const ALIASES: Record<CanonicalField, string[]> = {
   totalTimeMs: ["total time", "time", "total"],
   bestLapMs: ["best lap", "best lap-time", "best lap time", "fast lap"],
   gapMs: ["difference", "diff", "gap"],
+  className: ["class"],
 };
 
-// Documented columns we understand but don't model in Phase 0 — recognized,
-// not flagged as unrecognized/unexpected.
-const KNOWN_UNMODELED = new Set(["last lap time", "last speed", "best speed", "class"]);
+// Documented columns we understand but don't model — recognized, not
+// flagged as unrecognized/unexpected.
+const KNOWN_UNMODELED = new Set(["last lap time", "last speed", "best speed"]);
 
 export function resolveColumn(header: string): ColumnResolution {
   const normalized = header.trim().toLowerCase();
