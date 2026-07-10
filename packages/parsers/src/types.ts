@@ -25,4 +25,27 @@ export interface ParsedSession {
   encoding: string;
 }
 
-export type SupportedFormat = "orbits_csv";
+export type SupportedFormat = "orbits_csv" | "generic_csv";
+
+export type CanonicalField =
+  | "position"
+  | "driverNumber"
+  | "driverName"
+  | "laps"
+  | "totalTimeMs"
+  | "bestLapMs"
+  | "gapMs";
+
+export const CANONICAL_FIELDS: CanonicalField[] = [
+  "position",
+  "driverNumber",
+  "driverName",
+  "laps",
+  "totalTimeMs",
+  "bestLapMs",
+  "gapMs",
+];
+
+// A raw CSV header resolves to a canonical field, to "known but not modeled
+// yet" (recognized, deliberately not surfaced as a warning), or to nothing.
+export type ColumnResolution = CanonicalField | "known_unmodeled" | null;

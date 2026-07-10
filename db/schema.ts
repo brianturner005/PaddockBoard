@@ -21,6 +21,11 @@ export const clubs = pgTable("clubs", {
   ownerUserId: uuid("owner_user_id")
     .notNull()
     .references(() => users.id),
+  // Last-used header -> canonical field mapping for this club's generic CSV
+  // exports (source=generic_csv sessions), so the mapping only needs
+  // entering once per timing-software format, not on every upload. Null
+  // until the club's first generic CSV upload.
+  csvColumnMapping: jsonb("csv_column_mapping").$type<Record<string, string>>(),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });
 

@@ -31,7 +31,7 @@ Progress:
 - [x] Chunk 8 — demo seed data (Blue Ridge Kart Club)
 - [x] Chunk 9 — landing page + docs pass
 
-**Phase 1 (championship engine) in progress.**
+**Phase 1 (championship engine) complete.**
 
 - [x] Points schemes + standings engine — `packages/standings`'
   `computeStandings` pure function (drop rounds, countback, bonus points,
@@ -47,7 +47,11 @@ Progress:
   full results history, linked from every public results and standings
   table
 - [x] Manual entry grid — turned out to already work from Phase 0: `source=manual` sessions open `SessionUploadPreview` straight to an empty editable table (no file step), so it's the same class-picker/save/publish flow, just without a parse step first
-- [ ] Generic CSV parser + per-club column mapping
+- [x] Generic CSV parser + per-club column mapping — `source=generic_csv`
+  sessions let an admin map their own timing software's column headers to
+  PaddockBoard's fields by hand; the mapping is saved per club
+  (`clubs.csv_column_mapping`) and pre-filled on the next upload of the
+  same format
 
 ## Stack
 

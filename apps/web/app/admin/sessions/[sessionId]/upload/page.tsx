@@ -22,7 +22,7 @@ export default async function SessionUploadPage({
   if (!result || result.club.ownerUserId !== user.id) {
     notFound();
   }
-  const { session, event, season } = result;
+  const { session, event, season, club } = result;
 
   const seasonClasses = await db
     .select({ id: classes.id, name: classes.name })
@@ -56,10 +56,12 @@ export default async function SessionUploadPage({
 
       <SessionUploadPreview
         sessionId={session.id}
-        source={session.source as "orbits_csv" | "manual"}
+        source={session.source as "orbits_csv" | "generic_csv" | "manual"}
         classes={seasonClasses}
         publicSlug={session.publicSlug}
         initialStatus={session.status as "draft" | "published"}
+        clubId={club.id}
+        initialColumnMapping={club.csvColumnMapping}
       />
     </div>
   );

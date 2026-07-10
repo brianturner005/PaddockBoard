@@ -1,0 +1,1 @@
+ALTER TABLE "clubs" ADD COLUMN "csv_column_mapping" jsonb;

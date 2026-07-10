@@ -219,3 +219,40 @@ committed data" posture carried over from Phase 0.
   timing data is a rarer, higher-stakes edit better done deliberately
   (still possible via the same PATCH endpoint, just not exposed in this
   table) than a click-to-edit cell.
+
+## Generic CSV parser + per-club column mapping
+
+Not every club runs Orbits. `source=generic_csv` sessions cover any other
+timing software's CSV export by having an admin map the file's own column
+headers to PaddockBoard's canonical fields by hand, once per club, instead
+of maintaining an alias table for formats nobody's documented.
+
+- **Shared parsing core**: orbits-csv and generic-csv only ever differed in
+  *how* a raw header resolves to a canonical field (a fixed alias table vs.
+  an admin-picked mapping) — everything downstream (decoding, duration
+  parsing, the DNF/DNS/DSQ status heuristic, warning generation) was
+  identical. Pulled that shared half out into `row-builder.ts` and
+  `duration.ts` at the `packages/parsers` root; `orbits-csv/parse.ts` and
+  the new `generic-csv/parse.ts` each just build a `Map<header,
+  ColumnResolution>` their own way and hand it to the same `buildRow`.
+  `CanonicalField` and `ColumnResolution` moved to `types.ts` as the shared
+  vocabulary both formats resolve into.
+- **Two-call parse API**: `readCsvHeaders(buffer)` reads just the header
+  row (Papa with `preview: 1`) so the UI can render a mapping form before
+  committing to a full parse; `parseGenericCsv(buffer, columnMapping)` does
+  the real parse once a mapping is chosen.  `parse()`'s signature grew an
+  options bag (`{ columnMapping }`) rather than a fifth positional
+  parameter that only one format uses.
+- **Per-club persistence, not per-session**: `clubs.csv_column_mapping`
+  (`jsonb`) stores the last-used mapping keyed by the *raw header string*.
+  `SessionUploadPreview` pre-fills the mapping form from it (exact header
+  match — a club whose software always exports identical column names
+  gets a zero-click mapping step after the first upload) and
+  `PATCH /api/clubs/[id]/csv-mapping` saves whatever mapping was just
+  used, so the club converges on "map once" rather than "map every
+  session." No mapping *history* is kept — only the most recent one,
+  since re-mapping after a genuine format change is expected and cheap.
+- **Required field**: the mapping UI won't let you continue without at
+  least one column mapped to driver name — every other field degrades
+  gracefully to a warning (same as orbits-csv), but a nameless row isn't
+  useful to anyone reviewing the preview table.
