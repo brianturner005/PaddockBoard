@@ -7,7 +7,7 @@ clean, shareable results page and live championship standings.
 > Upload your timing file. Get a beautiful results site. Done before the
 > next heat starts.
 
-**[Landing page](https://brianturner005.github.io/PaddockBoard/)** · **Live app:** TODO — add once a production domain is confirmed
+**[Landing page](https://brianturner005.github.io/PaddockBoard/)** · **[Live app](https://paddock-board-web.vercel.app)**
 
 This README is the engineering doc (setup, architecture, build status). The
 landing page carries the pitch for non-technical visitors.
