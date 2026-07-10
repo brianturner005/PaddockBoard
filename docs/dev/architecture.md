@@ -450,3 +450,55 @@ chunk adds a browsable path in from the homepage.
   carried `clubSlug`) — the discovery path also works "outward" from a
   results page back up to everything else that club has published, not
   just "inward" from the homepage down.
+
+# Phase 5
+
+## Visual design pass
+
+The app was deliberately bare Tailwind-for-spacing-only since Phase 0
+(see the "Admin UI" section of the original plan). With the feature set
+broad and stable, this chunk is a first real design pass — no new
+functionality, purely presentation.
+
+- **One accent color, used sparingly.** Orange (`orange-600` light /
+  `orange-400` dark) for primary buttons, the site's small logo dot, and
+  P1 in results/standings tables. Deliberately not red, green, or amber —
+  those are already semantic (error/success/warning) throughout the app,
+  and reusing one of them as the brand color would blur that meaning.
+  Applied at a single point of leverage where possible: `form-styles.ts`'s
+  `buttonClass`/`inputClass` are shared by every admin form and the
+  results editor, so retinting those two strings restyled the whole admin
+  surface in one edit rather than touching each form.
+- **Two bugs found and fixed while touching this code, unrelated to
+  styling but caught because the files were open:** the root layout still
+  had create-next-app's default `<title>Create Next App</title>`, never
+  overwritten since Phase 0's scaffold chunk; and `globals.css` hardcoded
+  `font-family: Arial, Helvetica, sans-serif` on `body`, silently
+  overriding the Geist font that `layout.tsx` loads and wires up via
+  `@theme inline` — the font was being loaded but never actually applied.
+  Both fixed (`layout.tsx` now sets real metadata and applies `font-sans`
+  on `<body>`; `globals.css` now uses `var(--font-sans)`).
+- **`PublicHeader`/`PublicFooter`/`PositionCell`** (`apps/web/components/`)
+  are the new shared chrome across all five public pages (`/`, `/c/[slug]`,
+  `/r/[slug]`, `/standings/[classId]`, `/d/[driverId]`) — a consistent top
+  bar and footer instead of each page hand-rolling its own back-link, and
+  one shared "Pos" column renderer (P1 gets the accent color, P2/P3 stay
+  bold-but-neutral) instead of three near-duplicate inline expressions.
+  Kept as plain components imported into each page rather than a Next.js
+  route-group layout (`(public)/layout.tsx`) — the five pages aren't
+  siblings under one directory today, and restructuring routes into a
+  group purely for shared chrome was a bigger, riskier change than the
+  design pass itself called for.
+- **Tables**: wrapped in a rounded bordered container with a tinted header
+  row, row dividers instead of a heavy border on every row, and a podium
+  highlight via `PositionCell`. Driver page stats (wins/podiums/best
+  finish) became three small bordered cards instead of an inline text row.
+- Not covered in this pass: admin CRUD pages (club/season/event/session
+  creation forms) picked up the retint via `form-styles.ts` but weren't
+  otherwise restyled — the highest-traffic surfaces (public results,
+  standings, driver, club pages, homepage) were prioritized within this
+  chunk's scope.
+- **Verification note**: this sandbox still can't reach Neon (same
+  constraint noted since chunk 2), so this was verified via
+  lint/typecheck/build only, same as every other chunk this session —
+  actual visual review needs to happen on the live Vercel deploy.

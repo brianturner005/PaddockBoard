@@ -1,6 +1,9 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { getClassStandingsData } from "@/lib/standings";
+import { PublicHeader } from "@/components/PublicHeader";
+import { PublicFooter } from "@/components/PublicFooter";
+import { PositionCell } from "@/components/PositionCell";
 
 interface PageProps {
   params: Promise<{ classId: string }>;
@@ -51,64 +54,72 @@ export default async function StandingsPage({ params }: PageProps) {
   const { data } = result;
 
   return (
-    <div className="mx-auto max-w-2xl px-6 py-10">
-      <header className="mb-8">
-        <p className="text-sm text-zinc-600 dark:text-zinc-400">
-          <Link href={`/c/${data.clubSlug}`} className="underline">
-            {data.clubName}
-          </Link>{" "}
-          · {data.seasonName}
-        </p>
-        <h1 className="mt-1 text-2xl font-semibold text-black dark:text-zinc-50">{data.className} Standings</h1>
-      </header>
+    <div className="min-h-screen">
+      <PublicHeader />
+      <div className="mx-auto max-w-2xl px-6 py-10">
+        <header className="mb-8">
+          <p className="text-sm text-zinc-600 dark:text-zinc-400">
+            <Link href={`/c/${data.clubSlug}`} className="underline">
+              {data.clubName}
+            </Link>{" "}
+            · {data.seasonName}
+          </p>
+          <h1 className="mt-1 text-2xl font-semibold text-black dark:text-zinc-50">
+            {data.className} Standings
+          </h1>
+        </header>
 
-      {data.rows.length === 0 ? (
-        <p className="text-sm text-zinc-600 dark:text-zinc-400">
-          No scored rounds yet — standings will appear once a session marked as counting toward the
-          championship is published.
-        </p>
-      ) : (
-        <div className="overflow-x-auto">
-          <table className="w-full min-w-[480px] text-left text-sm">
-            <thead>
-              <tr className="border-b border-zinc-300 dark:border-zinc-700">
-                <th className="py-2 pr-2">Pos</th>
-                <th className="py-2 pr-2"></th>
-                <th className="py-2 pr-2">Driver</th>
-                <th className="py-2 pr-2">Points</th>
-                <th className="py-2 pr-2">Rounds</th>
-              </tr>
-            </thead>
-            <tbody>
-              {data.rows.map((row) => (
-                <tr key={row.driverId} className="border-b border-zinc-200 dark:border-zinc-800">
-                  <td className="py-2 pr-2 font-medium">{row.position}</td>
-                  <td className="py-2 pr-2">
-                    <PositionChange change={row.positionChange} />
-                  </td>
-                  <td className="py-2 pr-2">
-                    <Link href={`/d/${row.driverId}`} className="underline">
-                      {row.driverName}
-                    </Link>
-                    {row.driverNumber ? (
-                      <span className="text-zinc-500 dark:text-zinc-400"> #{row.driverNumber}</span>
-                    ) : null}
-                  </td>
-                  <td className="py-2 pr-2 font-medium">{row.totalPoints}</td>
-                  <td className="py-2 pr-2 text-zinc-600 dark:text-zinc-400">
-                    {row.roundsCounted}
-                    {row.roundsDropped > 0 ? ` (+${row.roundsDropped} dropped)` : ""}
-                  </td>
+        {data.rows.length === 0 ? (
+          <p className="text-sm text-zinc-600 dark:text-zinc-400">
+            No scored rounds yet — standings will appear once a session marked as counting toward the
+            championship is published.
+          </p>
+        ) : (
+          <div className="overflow-x-auto rounded-lg border border-zinc-200 dark:border-zinc-800">
+            <table className="w-full min-w-[480px] text-left text-sm">
+              <thead>
+                <tr className="border-b border-zinc-200 bg-zinc-50 dark:border-zinc-800 dark:bg-zinc-900">
+                  <th className="py-2 pr-2 pl-4">Pos</th>
+                  <th className="py-2 pr-2"></th>
+                  <th className="py-2 pr-2">Driver</th>
+                  <th className="py-2 pr-2">Points</th>
+                  <th className="py-2 pr-4">Rounds</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      )}
+              </thead>
+              <tbody>
+                {data.rows.map((row) => (
+                  <tr
+                    key={row.driverId}
+                    className="border-b border-zinc-100 last:border-0 dark:border-zinc-800/60"
+                  >
+                    <td className="py-2 pr-2 pl-4">
+                      <PositionCell position={row.position} fallback="—" />
+                    </td>
+                    <td className="py-2 pr-2">
+                      <PositionChange change={row.positionChange} />
+                    </td>
+                    <td className="py-2 pr-2">
+                      <Link href={`/d/${row.driverId}`} className="underline">
+                        {row.driverName}
+                      </Link>
+                      {row.driverNumber ? (
+                        <span className="text-zinc-500 dark:text-zinc-400"> #{row.driverNumber}</span>
+                      ) : null}
+                    </td>
+                    <td className="py-2 pr-2 font-medium text-black dark:text-zinc-50">{row.totalPoints}</td>
+                    <td className="py-2 pr-4 text-zinc-600 dark:text-zinc-400">
+                      {row.roundsCounted}
+                      {row.roundsDropped > 0 ? ` (+${row.roundsDropped} dropped)` : ""}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
 
-      <footer className="mt-12 border-t border-zinc-200 pt-6 text-xs text-zinc-500 dark:border-zinc-800">
-        Powered by PaddockBoard
-      </footer>
+        <PublicFooter />
+      </div>
     </div>
   );
 }

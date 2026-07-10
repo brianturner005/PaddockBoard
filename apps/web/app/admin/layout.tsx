@@ -11,7 +11,11 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   return (
     <div className="min-h-screen bg-zinc-50 dark:bg-black">
       <header className="flex items-center justify-between border-b border-zinc-200 px-6 py-4 dark:border-zinc-800">
-        <Link href="/admin" className="font-semibold text-black dark:text-zinc-50">
+        <Link
+          href="/admin"
+          className="flex items-center gap-2 font-semibold text-black dark:text-zinc-50"
+        >
+          <span aria-hidden className="h-2 w-2 rounded-full bg-orange-600 dark:bg-orange-400" />
           PaddockBoard
         </Link>
         <div className="flex items-center gap-4 text-sm text-zinc-600 dark:text-zinc-400">
