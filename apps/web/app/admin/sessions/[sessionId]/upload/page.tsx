@@ -6,6 +6,7 @@ import { classes } from "@paddockboard/db/schema";
 import { getCurrentUser } from "@/lib/auth";
 import { getSessionWithClub } from "@/lib/ownership";
 import { SessionUploadPreview } from "@/components/SessionUploadPreview";
+import { CountsForStandingsToggle } from "@/components/CountsForStandingsToggle";
 
 export default async function SessionUploadPage({
   params,
@@ -37,6 +38,9 @@ export default async function SessionUploadPage({
         <p className="text-sm text-zinc-600 dark:text-zinc-400">
           {session.type} · {session.status}
         </p>
+        <div className="mt-2">
+          <CountsForStandingsToggle sessionId={session.id} initialValue={session.countsForStandings} />
+        </div>
       </div>
 
       <SessionUploadPreview

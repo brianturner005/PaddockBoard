@@ -42,7 +42,12 @@ export default async function SeasonPage({ params }: { params: Promise<{ seasonI
         ) : (
           <ul className="mt-3 flex flex-col gap-1 text-sm text-zinc-800 dark:text-zinc-200">
             {seasonClasses.map((cls) => (
-              <li key={cls.id}>{cls.name}</li>
+              <li key={cls.id}>
+                {cls.name}{" "}
+                <Link href={`/standings/${cls.id}`} className="underline" target="_blank" rel="noopener noreferrer">
+                  standings
+                </Link>
+              </li>
             ))}
           </ul>
         )}

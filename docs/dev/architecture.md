@@ -122,3 +122,48 @@ Results are grouped by class server-side even though Phase 0's commit flow
 correct shape for the domain model regardless, and costs nothing extra
 now that per-row class assignment becomes possible in Phase 1 (same seam
 noted in the chunk 6 section above).
+
+# Phase 1
+
+## Standings engine
+
+`packages/standings` is the pure function the original brief mandated:
+`computeStandings(rounds, scheme, classId) → DriverStanding[]`, no I/O, no
+DB access, exhaustively tested (drop rounds, ties/countback, bonus points,
+mixed-class sessions, DNF/DSQ handling — see `compute.test.ts`).
+
+Two domain decisions made explicit here since they weren't obvious from
+the schema alone:
+
+- **Which session counts.** Standings operate on *rounds* (events), not
+  individual sessions — "best 7 of 9" means 7 of 9 events. A new
+  `sessions.counts_for_standings` boolean marks which session in an event
+  scores (defaulted true for `type=final|feature`, false otherwise, at
+  creation time in the API route — not a DB-level default, since the
+  right value depends on `type`). Editable per-session via
+  `PATCH /api/sessions/[id]` and a checkbox in the admin upload page,
+  since not every club scores the same way (some score heats, some run a
+  single trophy race with no "final" at all).
+- **Pole bonus is deferred.** `PointsScheme.poleBonus` exists and is
+  editable, but `computeStandings` doesn't compute it — there's no data
+  source yet for "who took pole" (that's a qualifying session's P1, and
+  qualifying isn't linked to the race session it applies to). Fastest lap
+  bonus *is* auto-computed (unambiguous: lowest `bestLapMs` among
+  finishers in that round/class). Pole can be applied by hand via a
+  result's `points_override` until real pole-tracking exists.
+
+`apps/web/lib/standings.ts` (`getClassStandingsData`, same `cache()`
+per-request dedup pattern as `public-session.ts`) is the only place that
+touches the DB for standings — it gathers each round's scoring-session
+results (all classes mixed together, exactly what `computeStandings` is
+built to filter) and calls the pure function twice per request: once for
+the full season, once with the most recent scored round dropped, to
+derive the "since last round" position-change indicator
+(`/standings/[classId]`) — there's no separate stored "previous
+standings" anywhere, it's just the same pure function called with one
+fewer round.
+
+**Seam for later**: `classId` alone identifies a season/club via joins, so
+`/standings/[classId]` works but isn't a pretty URL. A short slug (like
+sessions' `public_slug`) would need a schema change — not done yet since
+it's cosmetic, not functional.

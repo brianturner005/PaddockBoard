@@ -1,4 +1,4 @@
-import { pgTable, uuid, text, timestamp, integer, bigint, jsonb, date, index } from "drizzle-orm/pg-core";
+import { pgTable, uuid, text, timestamp, integer, bigint, jsonb, date, boolean, index } from "drizzle-orm/pg-core";
 
 // Phase 0 schema. `standings` (a Phase 1+ cache table) intentionally does not
 // exist yet. `points_schemes`, `results.penalties`, and `results.points_override`
@@ -84,6 +84,12 @@ export const sessions = pgTable(
     name: text("name").notNull(),
     source: text("source").$type<"orbits_csv" | "orbits_html" | "generic_csv" | "manual">().notNull(),
     status: text("status").$type<"draft" | "published">().notNull().default("draft"),
+    // Which session in an event counts toward championship points -- not
+    // every published session should score (practice/qualifying usually
+    // shouldn't). Defaults are set by application code at session-creation
+    // time (true for final/feature, false otherwise) rather than a DB
+    // default, since the right default depends on `type`.
+    countsForStandings: boolean("counts_for_standings").notNull().default(false),
     publicSlug: text("public_slug").notNull().unique(),
     rawFileBlobUrl: text("raw_file_blob_url"),
     publishedAt: timestamp("published_at", { withTimezone: true }),

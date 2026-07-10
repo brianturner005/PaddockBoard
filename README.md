@@ -29,7 +29,20 @@ Progress:
 - [x] Chunk 6 — commit rows + publish flow
 - [x] Chunk 7 — public results page (`/r/[slug]`) — **completes Phase 0's definition of done**
 - [x] Chunk 8 — demo seed data (Blue Ridge Kart Club)
-- [x] Chunk 9 — landing page + docs pass — GitHub Pages still needs to be enabled in repo settings (Settings → Pages → `main` / `/docs`)
+- [x] Chunk 9 — landing page + docs pass
+
+**Phase 1 (championship engine) in progress.**
+
+- [x] Points schemes + standings engine — `packages/standings`'
+  `computeStandings` pure function (drop rounds, countback, bonus points,
+  mixed-class, DNF/DSQ, exhaustively tested) + a real points-scheme editor
+  in the admin UI (`/admin/clubs/[clubId]/points-scheme`)
+- [x] Standings page (`/standings/[classId]`) — recomputed per request,
+  with ↑/↓ position-change indicators since the last scored round
+- [ ] Result editing + audit trail
+- [ ] Driver auto-pages
+- [ ] Manual entry grid (standalone, not just inside the upload flow)
+- [ ] Generic CSV parser + per-club column mapping
 
 ## Stack
 
@@ -128,8 +141,7 @@ club's data rather than duplicating it. Public results:
 `docs/index.html` + `docs/styles.css` — plain hand-written HTML/CSS, no
 build step, served by GitHub Pages directly from `/docs` on `main`.
 Internal dev docs (`docs/dev/`) live alongside it but aren't linked from
-the public page. To enable/update the live URL: repo Settings → Pages →
-Source: Deploy from a branch → `main` / `/docs`.
+the public page.
 
 ## License
 

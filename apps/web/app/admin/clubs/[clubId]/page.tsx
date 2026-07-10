@@ -27,6 +27,9 @@ export default async function ClubPage({ params }: { params: Promise<{ clubId: s
         </Link>
         <h1 className="mt-2 text-xl font-semibold text-black dark:text-zinc-50">{club.name}</h1>
         <p className="text-sm text-zinc-600 dark:text-zinc-400">/{club.slug}</p>
+        <Link href={`/admin/clubs/${club.id}/points-scheme`} className="mt-1 inline-block text-sm underline">
+          Edit points scheme
+        </Link>
       </div>
 
       <section>
