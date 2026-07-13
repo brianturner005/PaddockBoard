@@ -29,3 +29,17 @@ body {
    highlighting the current leader/winner in results tables. Kept out of
    the red/green/amber range since those are already semantic (error/
    success/warning) throughout the app. See docs/dev/architecture.md. */
+
+/* Printing a standings/results table: force light background and black
+   text regardless of the viewer's OS dark-mode preference (a separate
+   media feature from `print`, so components' many `dark:text-*` utility
+   classes would otherwise stay dark-mode-colored -- often near-white text
+   on a white page, i.e. invisible -- when printing from a dark-mode
+   browser). Blunt but effective; the accent/podium colors aren't load-
+   bearing for a printed handout. */
+@media print {
+  * {
+    color: black !important;
+    background: white !important;
+  }
+}

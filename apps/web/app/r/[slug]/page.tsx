@@ -1,15 +1,11 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { getPublicSessionData } from "@/lib/public-session";
-import { formatMs } from "@/lib/format";
+import { formatMs, formatGap } from "@/lib/format";
 import { PublicHeader } from "@/components/PublicHeader";
 import { PublicFooter } from "@/components/PublicFooter";
 import { PositionCell } from "@/components/PositionCell";
-
-function formatGap(ms: number | null): string {
-  if (ms === null) return "—";
-  return `+${(ms / 1000).toFixed(3)}`;
-}
+import { PrintButton } from "@/components/PrintButton";
 
 const STATUS_LABELS: Record<string, string> = {
   dnf: "DNF",
@@ -79,6 +75,12 @@ export default async function PublicResultsPage({ params }: PageProps) {
             {data.eventName}
             {data.venue ? ` · ${data.venue}` : ""} · {data.eventDate}
           </p>
+          <div className="mt-2 flex gap-3 print:hidden">
+            <a href={`/api/public/sessions/${slug}/csv`} className="text-sm underline">
+              Download CSV
+            </a>
+            <PrintButton />
+          </div>
         </header>
 
         {data.classes.length === 0 ? (

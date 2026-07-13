@@ -115,6 +115,13 @@ Progress:
   confirm-email click required before it's live) and a one-click
   unsubscribe link in every notification
 
+**Phase 8 (export) in progress.**
+
+- [x] Standings & results export — a "Download CSV" link on
+  `/standings/[classId]` and `/r/[slug]` exports the same data shown on
+  the page; a "Print" button plus a print stylesheet turns either page
+  into a clean, legible printout for trophy banquets and handouts
+
 ## Stack
 
 - **Frontend + API**: Next.js (App Router) on Vercel — a single app; route

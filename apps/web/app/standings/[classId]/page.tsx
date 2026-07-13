@@ -5,6 +5,7 @@ import { PublicHeader } from "@/components/PublicHeader";
 import { PublicFooter } from "@/components/PublicFooter";
 import { PositionCell } from "@/components/PositionCell";
 import { SubscribeForm } from "@/components/SubscribeForm";
+import { PrintButton } from "@/components/PrintButton";
 
 interface PageProps {
   params: Promise<{ classId: string }>;
@@ -70,6 +71,12 @@ export default async function StandingsPage({ params, searchParams }: PageProps)
           <h1 className="mt-1 text-2xl font-semibold text-black dark:text-zinc-50">
             {data.className} Standings
           </h1>
+          <div className="mt-2 flex gap-3 print:hidden">
+            <a href={`/api/standings/${classId}/csv`} className="text-sm underline">
+              Download CSV
+            </a>
+            <PrintButton />
+          </div>
         </header>
 
         {data.rows.length === 0 ? (
@@ -121,7 +128,7 @@ export default async function StandingsPage({ params, searchParams }: PageProps)
           </div>
         )}
 
-        <div className="mt-8">
+        <div className="mt-8 print:hidden">
           <SubscribeForm target={{ classId }} subscribed={subscribed} />
         </div>
 

@@ -631,3 +631,38 @@ or a driver and get an email when new results publish for it.
   submit and a confirmed/unsubscribed message when landing back from
   either link (`?subscribed=confirmed|removed` query flag) — the same
   redirect-with-a-flag pattern the driver-claim flow already established.
+
+# Phase 8
+
+## Standings & results export
+
+Clubs need a printable or emailable standings sheet (trophy banquets,
+handouts) — this closes that gap without adding a new data model, only
+new ways to read what already exists.
+
+- **CSV export reuses the existing data functions.** `GET
+  /api/standings/[classId]/csv` calls `getClassStandingsData` and `GET
+  /api/public/sessions/[slug]/csv` calls `getPublicSessionData` — the same
+  functions the HTML pages already render from — and just formats the
+  result as `text/csv` with a `Content-Disposition: attachment` header
+  instead of JSX. No new queries, no risk of the export drifting out of
+  sync with what the page shows. `apps/web/lib/csv.ts` is a small
+  dependency-free RFC-4180-ish writer (quote-when-needed, double internal
+  quotes) — the output is simple enough not to justify a library.
+- **`formatGap` moved from a private helper in `/r/[slug]/page.tsx` to
+  `lib/format.ts`** (alongside the already-shared `formatMs`) since the
+  new CSV route needed the identical gap-formatting logic — the same
+  "extract on the second real usage" pattern already applied to `formatMs`
+  itself back in Phase 0/1.
+- **Print support is a stylesheet, not a new route.** A `PrintButton`
+  (`window.print()`) plus `print:hidden` on `PublicHeader`, `PublicFooter`,
+  and the subscribe form section means the existing results/standings
+  pages themselves double as the printable view — no separate print
+  template to keep in sync with the real one. `globals.css` adds a blunt
+  `@media print { * { color: black !important; background: white
+  !important; } }` — necessary because `prefers-color-scheme: dark` and
+  `print` are independent media features, so printing from a dark-mode
+  browser would otherwise keep every `dark:text-zinc-50` utility class
+  dark-mode-colored, i.e. often near-white text on white paper. Losing the
+  accent/podium colors on a printed handout is an acceptable trade for
+  guaranteed legibility.

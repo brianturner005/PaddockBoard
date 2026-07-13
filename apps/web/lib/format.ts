@@ -5,3 +5,8 @@ export function formatMs(ms: number | null | undefined): string {
   const seconds = (totalSeconds % 60).toFixed(3);
   return minutes > 0 ? `${minutes}:${seconds.padStart(6, "0")}` : seconds;
 }
+
+export function formatGap(ms: number | null | undefined): string {
+  if (ms === null || ms === undefined) return "—";
+  return `+${(ms / 1000).toFixed(3)}`;
+}
