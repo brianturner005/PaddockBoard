@@ -2,7 +2,7 @@ import Link from "next/link";
 
 export function PublicHeader() {
   return (
-    <header className="border-b border-zinc-200 dark:border-zinc-800">
+    <header className="border-b border-zinc-200 print:hidden dark:border-zinc-800">
       <div className="mx-auto flex max-w-2xl items-center justify-between px-6 py-4">
         <Link
           href="/"
