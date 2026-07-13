@@ -43,6 +43,13 @@
       "when": 1783694819408,
       "tag": "0005_cuddly_jack_murdock",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1783956978144,
+      "tag": "0006_secret_northstar",
+      "breakpoints": true
     }
   ]
 }

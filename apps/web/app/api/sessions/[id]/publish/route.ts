@@ -1,9 +1,10 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest, NextResponse, after } from "next/server";
 import { eq } from "drizzle-orm";
 import { db } from "@paddockboard/db";
 import { sessions } from "@paddockboard/db/schema";
 import { getCurrentUser } from "@/lib/auth";
 import { getSessionWithClub, hasClubAccess } from "@/lib/ownership";
+import { notifySubscribersOfPublish } from "@/lib/notify";
 
 export async function POST(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -23,6 +24,20 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     .set({ status: "published", publishedAt: new Date() })
     .where(eq(sessions.id, id))
     .returning();
+
+  // after() (not a bare fire-and-forget promise) so this reliably runs to
+  // completion on Vercel even though the response is already sent -- a
+  // detached promise isn't guaranteed to finish once a serverless
+  // function's response has flushed.
+  after(() =>
+    notifySubscribersOfPublish({
+      sessionId: session.id,
+      sessionName: session.name,
+      publicSlug: session.publicSlug,
+      eventName: result.event.name,
+      clubName: result.club.name,
+    }).catch((err) => console.error("Failed to notify subscribers", err))
+  );
 
   return NextResponse.json({ session });
 }
