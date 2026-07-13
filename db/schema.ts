@@ -206,3 +206,24 @@ export const resultEdits = pgTable(
   },
   (table) => [index("idx_result_edits_result").on(table.resultId)]
 );
+
+// Email notification subscriptions. Exactly one of classId/driverId is set
+// per row (enforced at the app layer via Zod, not a DB check constraint --
+// consistent with how this schema handles other invariants). No login
+// required to subscribe -- confirmedAt gates whether it's live, the same
+// unguessable-UUID-as-auth-boundary pattern used for sessions.public_slug.
+export const subscriptions = pgTable(
+  "subscriptions",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    email: text("email").notNull(),
+    classId: uuid("class_id").references(() => classes.id),
+    driverId: uuid("driver_id").references(() => drivers.id),
+    confirmedAt: timestamp("confirmed_at", { withTimezone: true }),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [
+    index("idx_subscriptions_class").on(table.classId),
+    index("idx_subscriptions_driver").on(table.driverId),
+  ]
+);

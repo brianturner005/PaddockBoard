@@ -102,13 +102,18 @@ Progress:
   auto-recalculate finishing position — `position` stays admin-controlled,
   same as it's always been
 
-**Phase 7 (admin UI polish + notifications) in progress.**
+**Phase 7 (admin UI polish + notifications) complete.**
 
 - [x] Admin UI polish — every admin page (clubs, seasons, classes, events,
   sessions, members, points scheme) now uses a shared `SectionCard`
   wrapper and hoverable divided-row lists instead of bare bulleted lists;
   session status is a colored badge; the results editor and upload preview
   tables match the rounded-bordered style already used on public pages
+- [x] Notifications — anyone can subscribe (by email, no account needed) to
+  a class or a driver from `/standings/[classId]` or `/d/[driverId]` and
+  get an email whenever new results publish for it. Double opt-in (a
+  confirm-email click required before it's live) and a one-click
+  unsubscribe link in every notification
 
 ## Stack
 

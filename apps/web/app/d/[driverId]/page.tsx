@@ -7,10 +7,11 @@ import { ClaimDriverForm } from "@/components/ClaimDriverForm";
 import { PublicHeader } from "@/components/PublicHeader";
 import { PublicFooter } from "@/components/PublicFooter";
 import { PositionCell } from "@/components/PositionCell";
+import { SubscribeForm } from "@/components/SubscribeForm";
 
 interface PageProps {
   params: Promise<{ driverId: string }>;
-  searchParams: Promise<{ claim?: string }>;
+  searchParams: Promise<{ claim?: string; subscribed?: string }>;
 }
 
 const STATUS_LABELS: Record<string, string> = {
@@ -35,7 +36,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 
 export default async function DriverPage({ params, searchParams }: PageProps) {
   const { driverId } = await params;
-  const { claim } = await searchParams;
+  const { claim, subscribed } = await searchParams;
   const [result, currentUser] = await Promise.all([getDriverPageData(driverId), getCurrentUser()]);
 
   if (result.status === "not_found") {
@@ -145,6 +146,10 @@ export default async function DriverPage({ params, searchParams }: PageProps) {
             </table>
           </div>
         )}
+
+        <div className="mt-8">
+          <SubscribeForm target={{ driverId: data.driverId }} subscribed={subscribed} />
+        </div>
 
         <PublicFooter />
       </div>

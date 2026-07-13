@@ -4,9 +4,11 @@ import { getClassStandingsData } from "@/lib/standings";
 import { PublicHeader } from "@/components/PublicHeader";
 import { PublicFooter } from "@/components/PublicFooter";
 import { PositionCell } from "@/components/PositionCell";
+import { SubscribeForm } from "@/components/SubscribeForm";
 
 interface PageProps {
   params: Promise<{ classId: string }>;
+  searchParams: Promise<{ subscribed?: string }>;
 }
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
@@ -36,8 +38,9 @@ function PositionChange({ change }: { change: number | null }) {
   return <span className="text-red-600 dark:text-red-400">↓{Math.abs(change)}</span>;
 }
 
-export default async function StandingsPage({ params }: PageProps) {
+export default async function StandingsPage({ params, searchParams }: PageProps) {
   const { classId } = await params;
+  const { subscribed } = await searchParams;
   const result = await getClassStandingsData(classId);
 
   if (result.status === "not_found") {
@@ -117,6 +120,10 @@ export default async function StandingsPage({ params }: PageProps) {
             </table>
           </div>
         )}
+
+        <div className="mt-8">
+          <SubscribeForm target={{ classId }} subscribed={subscribed} />
+        </div>
 
         <PublicFooter />
       </div>

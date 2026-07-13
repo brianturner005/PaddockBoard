@@ -582,3 +582,52 @@ weren't otherwise restyled. First Phase 7 chunk closes that gap.
   — they already share `inputClass`/`buttonClass`/`labelClass`, so they
   picked up the accent color for free in Phase 5, and their form-field
   structure itself wasn't the thing this pass was scoped to fix.
+
+## Notifications
+
+Second Phase 7 chunk: anyone can subscribe (by email, no login) to a class
+or a driver and get an email when new results publish for it.
+
+- **New `subscriptions` table**, not reusing `club_members`/`users` — this
+  needs to work for someone with no PaddockBoard account at all (a parent
+  following their kid's results). One row per subscription, exactly one of
+  `classId`/`driverId` set (enforced by a Zod `.refine` in
+  `createSubscriptionSchema`, not a DB check constraint — consistent with
+  how this schema handles other invariants, e.g. `results.penalties`'
+  shape).
+- **Double opt-in, no account required.** `POST /api/subscriptions`
+  creates an unconfirmed row and sends a confirm email;
+  `GET /api/subscriptions/[id]/confirm` sets `confirmed_at` and only
+  confirmed rows are ever queried when sending notifications. Skipping
+  this would make the endpoint a way to mail-bomb an arbitrary address
+  with unwanted signups — the same reasoning that led the magic-link and
+  driver-claim flows to always require an email round-trip before anything
+  becomes real. The subscription id itself is the unguessable-UUID auth
+  boundary for both confirm and unsubscribe links (no separate signed
+  token) — same trust model already used for `sessions.public_slug`.
+- **Trigger point is `POST /api/sessions/[id]/publish`**, not a separate
+  "standings changed" event — standings are always computed live
+  (`computeStandings` has no stored cache to invalidate), so "a scoring
+  session published" *is* the meaningful event for both class and driver
+  subscribers. `apps/web/lib/notify.ts`'s `notifySubscribersOfPublish`
+  reads the newly-published session's distinct class/driver ids, matches
+  confirmed subscriptions against either, and dedupes by email before
+  sending — someone subscribed to both a class and a driver appearing in
+  the same session gets one email, not two (its unsubscribe link only
+  covers whichever subscription was picked first in that case, a
+  documented simplification rather than a correctness bug).
+- **`after()`, not a bare unawaited promise.** The publish route schedules
+  `notifySubscribersOfPublish` via Next's `after()` so it reliably
+  completes even though the HTTP response is already sent — a
+  fire-and-forget `.catch()` without `after()` isn't guaranteed to finish
+  once a Vercel serverless function's response has flushed. Every
+  individual send inside `notifySubscribersOfPublish` is wrapped in
+  `Promise.allSettled` + try/catch so one failed email (or a missing
+  `RESEND_API_KEY` in an environment that hasn't configured it) never
+  blocks the others or the publish action itself — notifications are
+  best-effort, not part of what makes a publish succeed.
+- **UI**: a `SubscribeForm` (email input + submit) on `/standings/[classId]`
+  and `/d/[driverId]`, showing a "check your email to confirm" message on
+  submit and a confirmed/unsubscribed message when landing back from
+  either link (`?subscribed=confirmed|removed` query flag) — the same
+  redirect-with-a-flag pattern the driver-claim flow already established.

@@ -9,3 +9,4 @@ export * from "./points-scheme";
 export * from "./result-edit";
 export * from "./csv-mapping";
 export * from "./club-member";
+export * from "./subscription";
