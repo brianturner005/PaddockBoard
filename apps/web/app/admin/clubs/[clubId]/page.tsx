@@ -7,6 +7,7 @@ import { getCurrentUser } from "@/lib/auth";
 import { getClubById, getClubMembership } from "@/lib/ownership";
 import { CreateSeasonForm } from "@/components/CreateSeasonForm";
 import { ClubMembersPanel } from "@/components/ClubMembersPanel";
+import { SectionCard } from "@/components/SectionCard";
 
 export default async function ClubPage({ params }: { params: Promise<{ clubId: string }> }) {
   const { clubId } = await params;
@@ -34,15 +35,17 @@ export default async function ClubPage({ params }: { params: Promise<{ clubId: s
         </Link>
       </div>
 
-      <section>
-        <h2 className="text-lg font-medium text-black dark:text-zinc-50">Seasons</h2>
+      <SectionCard title="Seasons">
         {clubSeasons.length === 0 ? (
-          <p className="mt-2 text-sm text-zinc-600 dark:text-zinc-400">No seasons yet.</p>
+          <p className="text-sm text-zinc-600 dark:text-zinc-400">No seasons yet.</p>
         ) : (
-          <ul className="mt-3 flex flex-col gap-2">
+          <ul className="-mx-2 mb-4 flex flex-col divide-y divide-zinc-100 dark:divide-zinc-800/60">
             {clubSeasons.map((season) => (
               <li key={season.id}>
-                <Link className="underline" href={`/admin/seasons/${season.id}`}>
+                <Link
+                  className="block rounded px-2 py-2 text-sm text-black transition hover:bg-zinc-50 dark:text-zinc-50 dark:hover:bg-zinc-900"
+                  href={`/admin/seasons/${season.id}`}
+                >
                   {season.name} ({season.year})
                 </Link>
               </li>
@@ -50,9 +53,11 @@ export default async function ClubPage({ params }: { params: Promise<{ clubId: s
           </ul>
         )}
         <CreateSeasonForm clubId={club.id} />
-      </section>
+      </SectionCard>
 
-      <ClubMembersPanel clubId={club.id} isOwner={membership.role === "owner"} currentUserId={user.id} />
+      <SectionCard title="Members">
+        <ClubMembersPanel clubId={club.id} isOwner={membership.role === "owner"} currentUserId={user.id} />
+      </SectionCard>
     </div>
   );
 }

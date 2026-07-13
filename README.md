@@ -92,7 +92,7 @@ Progress:
   actually applied (a hardcoded `font-family` in `globals.css` silently
   overrode it)
 
-**Phase 6 (penalties) in progress.**
+**Phase 6 (penalties) complete.**
 
 - [x] Penalty tracking — `results.penalties` (unused since Phase 0) is now
   a structured list of `{ description, pointsDelta }` entries, editable
@@ -101,6 +101,14 @@ Progress:
   "penalty" badge with the reason on any affected row. Doesn't
   auto-recalculate finishing position — `position` stays admin-controlled,
   same as it's always been
+
+**Phase 7 (admin UI polish + notifications) in progress.**
+
+- [x] Admin UI polish — every admin page (clubs, seasons, classes, events,
+  sessions, members, points scheme) now uses a shared `SectionCard`
+  wrapper and hoverable divided-row lists instead of bare bulleted lists;
+  session status is a colored badge; the results editor and upload preview
+  tables match the rounded-bordered style already used on public pages
 
 ## Stack
 

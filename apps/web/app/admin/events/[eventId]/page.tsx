@@ -6,6 +6,7 @@ import { sessions } from "@paddockboard/db/schema";
 import { getCurrentUser } from "@/lib/auth";
 import { getEventWithClub, hasClubAccess } from "@/lib/ownership";
 import { CreateSessionForm } from "@/components/CreateSessionForm";
+import { SectionCard } from "@/components/SectionCard";
 
 export default async function EventPage({ params }: { params: Promise<{ eventId: string }> }) {
   const { eventId } = await params;
@@ -33,24 +34,36 @@ export default async function EventPage({ params }: { params: Promise<{ eventId:
         </p>
       </div>
 
-      <section>
-        <h2 className="text-lg font-medium text-black dark:text-zinc-50">Sessions</h2>
+      <SectionCard title="Sessions">
         {eventSessions.length === 0 ? (
-          <p className="mt-2 text-sm text-zinc-600 dark:text-zinc-400">No sessions yet.</p>
+          <p className="text-sm text-zinc-600 dark:text-zinc-400">No sessions yet.</p>
         ) : (
-          <ul className="mt-3 flex flex-col gap-1 text-sm text-zinc-800 dark:text-zinc-200">
+          <ul className="-mx-2 mb-4 flex flex-col divide-y divide-zinc-100 dark:divide-zinc-800/60">
             {eventSessions.map((session) => (
               <li key={session.id}>
-                <Link className="underline" href={`/admin/sessions/${session.id}/upload`}>
-                  {session.name}
-                </Link>{" "}
-                — {session.type} — {session.status}
+                <Link
+                  className="flex items-center justify-between gap-2 rounded px-2 py-2 text-sm text-black transition hover:bg-zinc-50 dark:text-zinc-50 dark:hover:bg-zinc-900"
+                  href={`/admin/sessions/${session.id}/upload`}
+                >
+                  <span className="underline">
+                    {session.name} <span className="text-zinc-500 dark:text-zinc-400">— {session.type}</span>
+                  </span>
+                  <span
+                    className={
+                      session.status === "published"
+                        ? "rounded bg-green-50 px-1.5 py-0.5 text-xs font-medium text-green-700 dark:bg-green-950 dark:text-green-400"
+                        : "rounded bg-zinc-100 px-1.5 py-0.5 text-xs font-medium text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400"
+                    }
+                  >
+                    {session.status}
+                  </span>
+                </Link>
               </li>
             ))}
           </ul>
         )}
         <CreateSessionForm eventId={event.id} />
-      </section>
+      </SectionCard>
     </div>
   );
 }

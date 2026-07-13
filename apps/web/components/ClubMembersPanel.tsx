@@ -59,14 +59,13 @@ export function ClubMembersPanel({ clubId, isOwner, currentUserId }: { clubId: s
   }
 
   return (
-    <section>
-      <h2 className="text-lg font-medium text-black dark:text-zinc-50">Members</h2>
+    <div>
       {members === null ? (
-        <p className="mt-2 text-sm text-zinc-600 dark:text-zinc-400">Loading…</p>
+        <p className="text-sm text-zinc-600 dark:text-zinc-400">Loading…</p>
       ) : (
-        <ul className="mt-3 flex flex-col gap-1 text-sm text-zinc-800 dark:text-zinc-200">
+        <ul className="-mx-2 mb-3 flex flex-col divide-y divide-zinc-100 text-sm text-zinc-800 dark:divide-zinc-800/60 dark:text-zinc-200">
           {members.map((member) => (
-            <li key={member.id} className="flex items-center gap-2">
+            <li key={member.id} className="flex items-center justify-between gap-2 px-2 py-2">
               <span>
                 {member.email} <span className="text-zinc-500 dark:text-zinc-400">({member.role})</span>
                 {member.userId === currentUserId && " — you"}
@@ -86,7 +85,7 @@ export function ClubMembersPanel({ clubId, isOwner, currentUserId }: { clubId: s
       )}
 
       {isOwner && (
-        <form onSubmit={handleAdd} className="mt-3 flex max-w-sm flex-col gap-3">
+        <form onSubmit={handleAdd} className="flex max-w-sm flex-col gap-3">
           <label className={labelClass}>
             Add a member by email
             <input
@@ -110,6 +109,6 @@ export function ClubMembersPanel({ clubId, isOwner, currentUserId }: { clubId: s
           </button>
         </form>
       )}
-    </section>
+    </div>
   );
 }

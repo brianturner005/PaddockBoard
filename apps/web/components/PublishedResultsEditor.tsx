@@ -143,24 +143,24 @@ export function PublishedResultsEditor({ sessionId }: { sessionId: string }) {
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="overflow-x-auto">
+      <div className="overflow-x-auto rounded-lg border border-zinc-200 dark:border-zinc-800">
         <table className="w-full min-w-[720px] text-left text-sm">
           <thead>
-            <tr className="border-b border-zinc-300 dark:border-zinc-700">
-              <th className="py-1 pr-2">Pos</th>
-              <th className="py-1 pr-2">Driver</th>
-              <th className="py-1 pr-2">Status</th>
-              <th className="py-1 pr-2">Laps</th>
-              <th className="py-1 pr-2">Points override</th>
-              <th className="py-1 pr-2">Penalties</th>
+            <tr className="border-b border-zinc-200 bg-zinc-50 dark:border-zinc-800 dark:bg-zinc-900">
+              <th className="py-1.5 pr-2 pl-3">Pos</th>
+              <th className="py-1.5 pr-2">Driver</th>
+              <th className="py-1.5 pr-2">Status</th>
+              <th className="py-1.5 pr-2">Laps</th>
+              <th className="py-1.5 pr-2">Points override</th>
+              <th className="py-1.5 pr-2">Penalties</th>
               <th></th>
             </tr>
           </thead>
           <tbody>
             {rows.map((row) => (
               <Fragment key={row.id}>
-                <tr className="border-b border-zinc-200 dark:border-zinc-800">
-                  <td className="py-1 pr-2">
+                <tr className="border-b border-zinc-100 last:border-0 dark:border-zinc-800/60">
+                  <td className="py-1 pr-2 pl-3">
                     <input
                       type="number"
                       value={row.position ?? ""}

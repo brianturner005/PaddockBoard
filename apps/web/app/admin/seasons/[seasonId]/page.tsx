@@ -7,6 +7,7 @@ import { getCurrentUser } from "@/lib/auth";
 import { getSeasonWithClub, hasClubAccess } from "@/lib/ownership";
 import { CreateClassForm } from "@/components/CreateClassForm";
 import { CreateEventForm } from "@/components/CreateEventForm";
+import { SectionCard } from "@/components/SectionCard";
 
 export default async function SeasonPage({ params }: { params: Promise<{ seasonId: string }> }) {
   const { seasonId } = await params;
@@ -35,15 +36,14 @@ export default async function SeasonPage({ params }: { params: Promise<{ seasonI
         </h1>
       </div>
 
-      <section>
-        <h2 className="text-lg font-medium text-black dark:text-zinc-50">Classes</h2>
+      <SectionCard title="Classes">
         {seasonClasses.length === 0 ? (
-          <p className="mt-2 text-sm text-zinc-600 dark:text-zinc-400">No classes yet.</p>
+          <p className="text-sm text-zinc-600 dark:text-zinc-400">No classes yet.</p>
         ) : (
-          <ul className="mt-3 flex flex-col gap-1 text-sm text-zinc-800 dark:text-zinc-200">
+          <ul className="-mx-2 mb-4 flex flex-col divide-y divide-zinc-100 text-sm text-zinc-800 dark:divide-zinc-800/60 dark:text-zinc-200">
             {seasonClasses.map((cls) => (
-              <li key={cls.id}>
-                {cls.name}{" "}
+              <li key={cls.id} className="flex items-center justify-between gap-2 px-2 py-2">
+                {cls.name}
                 <Link href={`/standings/${cls.id}`} className="underline" target="_blank" rel="noopener noreferrer">
                   standings
                 </Link>
@@ -52,26 +52,28 @@ export default async function SeasonPage({ params }: { params: Promise<{ seasonI
           </ul>
         )}
         <CreateClassForm seasonId={season.id} />
-      </section>
+      </SectionCard>
 
-      <section>
-        <h2 className="text-lg font-medium text-black dark:text-zinc-50">Events</h2>
+      <SectionCard title="Events">
         {seasonEvents.length === 0 ? (
-          <p className="mt-2 text-sm text-zinc-600 dark:text-zinc-400">No events yet.</p>
+          <p className="text-sm text-zinc-600 dark:text-zinc-400">No events yet.</p>
         ) : (
-          <ul className="mt-3 flex flex-col gap-2">
+          <ul className="-mx-2 mb-4 flex flex-col divide-y divide-zinc-100 dark:divide-zinc-800/60">
             {seasonEvents.map((event) => (
               <li key={event.id}>
-                <Link className="underline" href={`/admin/events/${event.id}`}>
-                  {event.name}
-                </Link>{" "}
-                <span className="text-sm text-zinc-600 dark:text-zinc-400">{event.eventDate}</span>
+                <Link
+                  className="flex items-center justify-between gap-2 rounded px-2 py-2 text-sm text-black transition hover:bg-zinc-50 dark:text-zinc-50 dark:hover:bg-zinc-900"
+                  href={`/admin/events/${event.id}`}
+                >
+                  <span className="underline">{event.name}</span>
+                  <span className="text-zinc-500 dark:text-zinc-400">{event.eventDate}</span>
+                </Link>
               </li>
             ))}
           </ul>
         )}
         <CreateEventForm seasonId={season.id} />
-      </section>
+      </SectionCard>
     </div>
   );
 }

@@ -548,3 +548,37 @@ functionality, purely presentation.
   more, with the reason and point value in a native title tooltip —
   transparency matters for results, a penalty shouldn't be invisible on
   the page people actually check.
+
+# Phase 7
+
+## Admin UI polish
+
+Phase 5's design pass covered the five public pages; admin CRUD pages only
+picked up the accent color via the shared `form-styles.ts` retint and
+weren't otherwise restyled. First Phase 7 chunk closes that gap.
+
+- **`SectionCard`** (`apps/web/components/SectionCard.tsx`) is a small
+  wrapper (bordered rounded container + heading) used across every admin
+  page that pairs a list with a create-form (clubs, seasons, classes,
+  events, sessions, members, points scheme) — the same repeated
+  list-plus-form shape that was previously just a bare `<section>` with no
+  visual grouping. `ClubMembersPanel` had its own internal `<h2>Members
+  </h2>` removed since the page now supplies that heading via
+  `SectionCard`, to avoid a duplicate.
+- **Entity lists** (clubs, seasons, classes, events, sessions, members)
+  became divided, hoverable rows (`divide-y` + hover background) instead
+  of a bare bulleted list — the same pattern the homepage's club directory
+  established in Phase 5, now applied consistently on the admin side too.
+- **Status badges**: session status (draft/published) is now a small
+  colored pill instead of plain text, reusing the same green/zinc
+  treatment already established for other state indicators in this app.
+- **Data tables** in `SessionUploadPreview` and `PublishedResultsEditor`
+  picked up the same rounded-bordered-container-with-tinted-header
+  treatment as the public results/standings tables from Phase 5, for
+  visual consistency between the admin editing view and what a driver
+  actually sees published.
+- Deliberately did not touch the individual create-forms' internal field
+  layout (`CreateClubForm`, `CreateSeasonForm`, `PointsSchemeForm`, etc.)
+  — they already share `inputClass`/`buttonClass`/`labelClass`, so they
+  picked up the accent color for free in Phase 5, and their form-field
+  structure itself wasn't the thing this pass was scoped to fix.

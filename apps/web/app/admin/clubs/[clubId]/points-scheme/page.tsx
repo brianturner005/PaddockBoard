@@ -6,6 +6,7 @@ import { pointsSchemes } from "@paddockboard/db/schema";
 import { getCurrentUser } from "@/lib/auth";
 import { getClubById, hasClubAccess } from "@/lib/ownership";
 import { PointsSchemeForm } from "@/components/PointsSchemeForm";
+import { SectionCard } from "@/components/SectionCard";
 
 export default async function PointsSchemePage({ params }: { params: Promise<{ clubId: string }> }) {
   const { clubId } = await params;
@@ -34,15 +35,17 @@ export default async function PointsSchemePage({ params }: { params: Promise<{ c
         </p>
       </div>
 
-      <PointsSchemeForm
-        schemeId={scheme.id}
-        initialName={scheme.name}
-        initialPositionPoints={scheme.positionPoints}
-        initialPoleBonus={scheme.poleBonus}
-        initialFastestLapBonus={scheme.fastestLapBonus}
-        initialDropRounds={scheme.dropRounds}
-        initialCountbackRule={scheme.countbackRule}
-      />
+      <SectionCard title="Scheme settings">
+        <PointsSchemeForm
+          schemeId={scheme.id}
+          initialName={scheme.name}
+          initialPositionPoints={scheme.positionPoints}
+          initialPoleBonus={scheme.poleBonus}
+          initialFastestLapBonus={scheme.fastestLapBonus}
+          initialDropRounds={scheme.dropRounds}
+          initialCountbackRule={scheme.countbackRule}
+        />
+      </SectionCard>
     </div>
   );
 }
