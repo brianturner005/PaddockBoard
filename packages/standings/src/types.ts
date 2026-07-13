@@ -7,6 +7,10 @@ export interface ResultForStandings {
   status: ResultStatus;
   bestLapMs: number | null;
   pointsOverride: number | null;
+  // Sum of results.penalties[].pointsDelta -- the caller pre-sums the
+  // structured penalty list so this stays a plain number the pure function
+  // just adds in, rather than pulling penalty-shape knowledge in here.
+  penaltyPoints: number;
 }
 
 // One scoring session's worth of results for a round (event). May contain

@@ -68,6 +68,7 @@ export const getClassStandingsData = cache(async (classId: string): Promise<Clas
         status: results.status,
         bestLapMs: results.bestLapMs,
         pointsOverride: results.pointsOverride,
+        penalties: results.penalties,
         driverName: drivers.displayName,
         driverNumber: drivers.number,
       })
@@ -89,6 +90,7 @@ export const getClassStandingsData = cache(async (classId: string): Promise<Clas
         status: r.status,
         bestLapMs: r.bestLapMs,
         pointsOverride: r.pointsOverride,
+        penaltyPoints: r.penalties.reduce((sum, p) => sum + p.pointsDelta, 0),
       })),
     });
   }

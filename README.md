@@ -82,7 +82,7 @@ Progress:
   link back to their club page, so browsing works both from the homepage
   down and from a shared results link back out
 
-**Phase 5 (visual design pass) in progress.**
+**Phase 5 (visual design pass) complete.**
 
 - [x] First design pass — a single accent color (orange) used sparingly
   for primary actions and P1 highlighting, shared header/footer/position-
@@ -91,6 +91,16 @@ Progress:
   still create-next-app's default, and the Geist font was loaded but never
   actually applied (a hardcoded `font-family` in `globals.css` silently
   overrode it)
+
+**Phase 6 (penalties) in progress.**
+
+- [x] Penalty tracking — `results.penalties` (unused since Phase 0) is now
+  a structured list of `{ description, pointsDelta }` entries, editable
+  per result from `PublishedResultsEditor`. Penalty points factor into
+  standings automatically; a session's public results page shows a
+  "penalty" badge with the reason on any affected row. Doesn't
+  auto-recalculate finishing position — `position` stays admin-controlled,
+  same as it's always been
 
 ## Stack
 

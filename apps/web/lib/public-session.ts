@@ -13,6 +13,7 @@ export interface PublicResultRow {
   totalTimeMs: number | null;
   gapMs: number | null;
   status: string;
+  penalties: { description: string; pointsDelta: number }[];
 }
 
 export interface PublicClassResults {
@@ -69,6 +70,7 @@ export const getPublicSessionData = cache(async (slug: string): Promise<PublicSe
       bestLapMs: results.bestLapMs,
       totalTimeMs: results.totalTimeMs,
       gapMs: results.gapMs,
+      penalties: results.penalties,
       driverId: drivers.id,
       driverName: drivers.displayName,
       driverNumber: drivers.number,
@@ -95,6 +97,7 @@ export const getPublicSessionData = cache(async (slug: string): Promise<PublicSe
       totalTimeMs: row.totalTimeMs,
       gapMs: row.gapMs,
       status: row.status,
+      penalties: row.penalties,
     });
   }
 

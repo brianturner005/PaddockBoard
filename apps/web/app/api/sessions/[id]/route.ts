@@ -37,6 +37,7 @@ export async function GET(_request: NextRequest, { params }: { params: Promise<{
       totalTimeMs: results.totalTimeMs,
       gapMs: results.gapMs,
       pointsOverride: results.pointsOverride,
+      penalties: results.penalties,
     })
     .from(results)
     .innerJoin(drivers, eq(results.driverId, drivers.id))
