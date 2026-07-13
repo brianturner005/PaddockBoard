@@ -50,6 +50,13 @@
       "when": 1783956978144,
       "tag": "0006_secret_northstar",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1783969097577,
+      "tag": "0007_condemned_warlock",
+      "breakpoints": true
     }
   ]
 }

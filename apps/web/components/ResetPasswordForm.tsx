@@ -2,12 +2,10 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import Link from "next/link";
 import { inputClass, buttonClass, labelClass } from "./form-styles";
 
-export function LoginForm() {
+export function ResetPasswordForm({ token }: { token: string }) {
   const router = useRouter();
-  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [status, setStatus] = useState<"idle" | "submitting" | "error">("idle");
   const [error, setError] = useState<string | null>(null);
@@ -17,16 +15,16 @@ export function LoginForm() {
     setStatus("submitting");
     setError(null);
 
-    const res = await fetch("/api/auth/login", {
+    const res = await fetch("/api/auth/reset-password", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email, password }),
+      body: JSON.stringify({ token, password }),
     });
 
     if (!res.ok) {
       const data = await res.json().catch(() => null);
       setStatus("error");
-      setError(data?.error ?? "Could not sign in.");
+      setError(data?.error ?? "Could not reset password.");
       return;
     }
 
@@ -37,19 +35,10 @@ export function LoginForm() {
   return (
     <form onSubmit={handleSubmit} className="flex max-w-sm flex-col gap-3">
       <label className={labelClass}>
-        Email
+        New password (at least 8 characters)
         <input
           required
-          type="email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          className={inputClass}
-        />
-      </label>
-      <label className={labelClass}>
-        Password
-        <input
-          required
+          minLength={8}
           type="password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
@@ -58,16 +47,8 @@ export function LoginForm() {
       </label>
       {error && <p className="text-sm text-red-600">{error}</p>}
       <button type="submit" disabled={status === "submitting"} className={buttonClass}>
-        {status === "submitting" ? "Signing in…" : "Sign in"}
+        {status === "submitting" ? "Saving…" : "Set new password"}
       </button>
-      <div className="flex justify-between text-sm">
-        <Link href="/signup" className="underline">
-          Create an account
-        </Link>
-        <Link href="/forgot-password" className="underline">
-          Forgot password?
-        </Link>
-      </div>
     </form>
   );
 }

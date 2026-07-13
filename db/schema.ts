@@ -20,6 +20,11 @@ export const users = pgTable("users", {
   id: uuid("id").primaryKey().defaultRandom(),
   email: text("email").notNull().unique(),
   name: text("name"),
+  // Nullable: rows created before Phase 9 (magic-link era), or created by
+  // findOrCreateUserByEmail via a club-member invite or driver claim, have
+  // no password yet -- they set one via the forgot-password flow the same
+  // way a truly forgotten password is recovered.
+  passwordHash: text("password_hash"),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });
 

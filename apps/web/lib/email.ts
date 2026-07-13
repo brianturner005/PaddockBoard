@@ -12,21 +12,39 @@ function getAppUrl(): string {
   return process.env.APP_URL ?? "http://localhost:3000";
 }
 
-export async function sendMagicLinkEmail(email: string, token: string): Promise<void> {
+export async function sendSignupConfirmEmail(email: string, token: string): Promise<void> {
   const appUrl = getAppUrl();
   const from = process.env.EMAIL_FROM ?? "PaddockBoard <onboarding@resend.dev>";
-  const link = `${appUrl}/api/auth/callback?token=${encodeURIComponent(token)}`;
+  const link = `${appUrl}/api/auth/confirm-signup?token=${encodeURIComponent(token)}`;
 
   const resend = getResendClient();
   const { error } = await resend.emails.send({
     from,
     to: email,
-    subject: "Your PaddockBoard sign-in link",
-    html: `<p>Click below to sign in to PaddockBoard. This link expires in 15 minutes.</p><p><a href="${link}">${link}</a></p>`,
+    subject: "Confirm your PaddockBoard account",
+    html: `<p>Click below to confirm this email and finish creating your PaddockBoard account. This link expires in 15 minutes.</p><p><a href="${link}">${link}</a></p><p>If you didn't request this, you can ignore this email — no account will be created unless you click the link.</p>`,
   });
 
   if (error) {
-    throw new Error(`Failed to send magic-link email: ${error.message}`);
+    throw new Error(`Failed to send signup-confirm email: ${error.message}`);
+  }
+}
+
+export async function sendPasswordResetEmail(email: string, token: string): Promise<void> {
+  const appUrl = getAppUrl();
+  const from = process.env.EMAIL_FROM ?? "PaddockBoard <onboarding@resend.dev>";
+  const link = `${appUrl}/reset-password?token=${encodeURIComponent(token)}`;
+
+  const resend = getResendClient();
+  const { error } = await resend.emails.send({
+    from,
+    to: email,
+    subject: "Reset your PaddockBoard password",
+    html: `<p>Click below to set a new password. This link expires in 15 minutes.</p><p><a href="${link}">${link}</a></p><p>If you didn't request this, you can ignore this email — your password won't change unless you click the link and set a new one.</p>`,
+  });
+
+  if (error) {
+    throw new Error(`Failed to send password-reset email: ${error.message}`);
   }
 }
 
