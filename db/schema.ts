@@ -12,10 +12,9 @@ import {
   uniqueIndex,
 } from "drizzle-orm/pg-core";
 
-// Phase 0 schema. `standings` (a Phase 1+ cache table) intentionally does not
-// exist yet. `points_schemes`, `results.penalties`, and `results.points_override`
-// exist now but are unused until Phase 1's standings computation lands — see
-// docs/dev/architecture.md for the full list of deliberate Phase 1 seams.
+// Schema has grown well past its Phase 0 skeleton -- see
+// docs/dev/architecture.md for the running log of design decisions and
+// deliberate seams as each phase landed.
 
 export const users = pgTable("users", {
   id: uuid("id").primaryKey().defaultRandom(),
@@ -175,7 +174,10 @@ export const results = pgTable(
     bestLapMs: integer("best_lap_ms"),
     totalTimeMs: bigint("total_time_ms", { mode: "number" }),
     gapMs: bigint("gap_ms", { mode: "number" }),
-    penalties: jsonb("penalties").$type<string[]>().notNull().default([]),
+    // Structured penalties (Phase 6) -- previously typed string[] and
+    // unused since Phase 0. Same jsonb column, default [] unchanged, so no
+    // migration is needed for this type-level change.
+    penalties: jsonb("penalties").$type<{ description: string; pointsDelta: number }[]>().notNull().default([]),
     pointsOverride: integer("points_override"),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   },

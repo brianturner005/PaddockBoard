@@ -35,6 +35,7 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
     totalTimeMs: found.result.totalTimeMs,
     gapMs: found.result.gapMs,
     pointsOverride: found.result.pointsOverride,
+    penalties: found.result.penalties,
   };
   const newValues = { ...previousValues, ...changes };
 

@@ -3,6 +3,11 @@
 import { Fragment, useEffect, useState } from "react";
 import { buttonClass, inputClass, labelClass } from "./form-styles";
 
+interface Penalty {
+  description: string;
+  pointsDelta: number;
+}
+
 interface ResultRow {
   id: string;
   driverId: string;
@@ -16,6 +21,7 @@ interface ResultRow {
   totalTimeMs: number | null;
   gapMs: number | null;
   pointsOverride: number | null;
+  penalties: Penalty[];
 }
 
 interface ResultEditEntry {
@@ -34,7 +40,8 @@ function rowsDiffer(a: ResultRow, b: ResultRow): boolean {
     a.bestLapMs !== b.bestLapMs ||
     a.totalTimeMs !== b.totalTimeMs ||
     a.gapMs !== b.gapMs ||
-    a.pointsOverride !== b.pointsOverride
+    a.pointsOverride !== b.pointsOverride ||
+    JSON.stringify(a.penalties) !== JSON.stringify(b.penalties)
   );
 }
 
@@ -46,6 +53,8 @@ export function PublishedResultsEditor({ sessionId }: { sessionId: string }) {
   const [historyFor, setHistoryFor] = useState<string | null>(null);
   const [history, setHistory] = useState<ResultEditEntry[]>([]);
   const [historyLoading, setHistoryLoading] = useState(false);
+  const [penaltiesFor, setPenaltiesFor] = useState<string | null>(null);
+  const [penaltyDraft, setPenaltyDraft] = useState({ description: "", pointsDelta: "" });
 
   useEffect(() => {
     fetch(`/api/sessions/${sessionId}`)
@@ -83,6 +92,7 @@ export function PublishedResultsEditor({ sessionId }: { sessionId: string }) {
             totalTimeMs: row.totalTimeMs,
             gapMs: row.gapMs,
             pointsOverride: row.pointsOverride,
+            penalties: row.penalties,
             reason,
           }),
         });
@@ -109,6 +119,24 @@ export function PublishedResultsEditor({ sessionId }: { sessionId: string }) {
     setHistoryLoading(false);
   }
 
+  function togglePenalties(resultId: string) {
+    setPenaltyDraft({ description: "", pointsDelta: "" });
+    setPenaltiesFor((prev) => (prev === resultId ? null : resultId));
+  }
+
+  function addPenalty(row: ResultRow) {
+    const description = penaltyDraft.description.trim();
+    const rawPoints = penaltyDraft.pointsDelta.trim();
+    const pointsDelta = Number(rawPoints);
+    if (!description || !rawPoints || !Number.isInteger(pointsDelta)) return;
+    updateRow(row.id, { penalties: [...row.penalties, { description, pointsDelta }] });
+    setPenaltyDraft({ description: "", pointsDelta: "" });
+  }
+
+  function removePenalty(row: ResultRow, index: number) {
+    updateRow(row.id, { penalties: row.penalties.filter((_, i) => i !== index) });
+  }
+
   if (!rows) {
     return <p className="text-sm text-zinc-600 dark:text-zinc-400">Loading results…</p>;
   }
@@ -116,7 +144,7 @@ export function PublishedResultsEditor({ sessionId }: { sessionId: string }) {
   return (
     <div className="flex flex-col gap-4">
       <div className="overflow-x-auto">
-        <table className="w-full min-w-[640px] text-left text-sm">
+        <table className="w-full min-w-[720px] text-left text-sm">
           <thead>
             <tr className="border-b border-zinc-300 dark:border-zinc-700">
               <th className="py-1 pr-2">Pos</th>
@@ -124,6 +152,7 @@ export function PublishedResultsEditor({ sessionId }: { sessionId: string }) {
               <th className="py-1 pr-2">Status</th>
               <th className="py-1 pr-2">Laps</th>
               <th className="py-1 pr-2">Points override</th>
+              <th className="py-1 pr-2">Penalties</th>
               <th></th>
             </tr>
           </thead>
@@ -178,15 +207,66 @@ export function PublishedResultsEditor({ sessionId }: { sessionId: string }) {
                       className={`w-20 ${inputClass}`}
                     />
                   </td>
+                  <td className="py-1 pr-2">
+                    <button type="button" onClick={() => togglePenalties(row.id)} className="text-sm underline">
+                      {row.penalties.length > 0 ? `${row.penalties.length} penalty` : "Add"}
+                      {row.penalties.length > 1 ? "s" : ""}
+                    </button>
+                  </td>
                   <td className="py-1">
                     <button type="button" onClick={() => toggleHistory(row.id)} className="text-sm underline">
                       History
                     </button>
                   </td>
                 </tr>
+                {penaltiesFor === row.id && (
+                  <tr>
+                    <td colSpan={7} className="bg-zinc-50 px-2 py-3 text-xs dark:bg-zinc-900">
+                      {row.penalties.length > 0 && (
+                        <ul className="mb-2 flex flex-col gap-1">
+                          {row.penalties.map((p, i) => (
+                            <li key={i} className="flex items-center gap-2">
+                              <span className="text-red-600 dark:text-red-400">{p.pointsDelta} pts</span>
+                              <span>{p.description}</span>
+                              <button
+                                type="button"
+                                onClick={() => removePenalty(row, i)}
+                                className="text-red-600 underline"
+                              >
+                                Remove
+                              </button>
+                            </li>
+                          ))}
+                        </ul>
+                      )}
+                      <div className="flex items-center gap-2">
+                        <input
+                          placeholder="Reason (e.g. avoidable contact T3)"
+                          value={penaltyDraft.description}
+                          onChange={(e) =>
+                            setPenaltyDraft((prev) => ({ ...prev, description: e.target.value }))
+                          }
+                          className={`w-56 ${inputClass}`}
+                        />
+                        <input
+                          type="number"
+                          placeholder="Points"
+                          value={penaltyDraft.pointsDelta}
+                          onChange={(e) =>
+                            setPenaltyDraft((prev) => ({ ...prev, pointsDelta: e.target.value }))
+                          }
+                          className={`w-24 ${inputClass}`}
+                        />
+                        <button type="button" onClick={() => addPenalty(row)} className={buttonClass}>
+                          Add penalty
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                )}
                 {historyFor === row.id && (
                   <tr>
-                    <td colSpan={6} className="bg-zinc-50 px-2 py-2 text-xs dark:bg-zinc-900">
+                    <td colSpan={7} className="bg-zinc-50 px-2 py-2 text-xs dark:bg-zinc-900">
                       {historyLoading ? (
                         "Loading…"
                       ) : history.length === 0 ? (

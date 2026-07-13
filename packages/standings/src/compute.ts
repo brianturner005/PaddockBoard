@@ -52,6 +52,11 @@ export function computeStandings(
         }
       }
 
+      // Penalties apply on top of either the position-based score or a
+      // manual override -- a steward's penalty decision is independent of
+      // how the base points were arrived at.
+      points += r.penaltyPoints;
+
       records.push({
         driverId: r.driverId,
         eventId: round.eventId,

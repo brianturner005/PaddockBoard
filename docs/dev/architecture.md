@@ -502,3 +502,49 @@ functionality, purely presentation.
   constraint noted since chunk 2), so this was verified via
   lint/typecheck/build only, same as every other chunk this session —
   actual visual review needs to happen on the live Vercel deploy.
+
+# Phase 6
+
+## Penalties
+
+`results.penalties` existed since Phase 0 as an unused seam, typed
+`string[]`. First real use of it.
+
+- **Structured, not free text.** Retyped to `{ description: string;
+  pointsDelta: number }[]` — same jsonb column, same `[]` default, so no
+  migration was needed for this chunk, only a TypeScript type change. A
+  bare string list would have made "how many points did this cost" a
+  parsing problem later; storing the delta alongside the reason keeps the
+  standings engine's job trivial (sum `pointsDelta`, no string parsing).
+- **Penalties apply on top of whatever points were already computed** —
+  position-based lookup *or* a manual `pointsOverride` — rather than being
+  yet another override mode. `packages/standings`'s `ResultForStandings`
+  gained a `penaltyPoints: number` field (the caller pre-sums the
+  structured list; the pure function only ever sees a plain number to add
+  in) and `computeStandings` adds it in after the override/position+bonus
+  branch. Kept the package's public surface minimal on purpose — it
+  doesn't need to know penalties have descriptions, only their point
+  effect.
+- **No automatic re-classification.** A penalty does not move a driver's
+  `results.position` or recompute finishing order — `position` stays the
+  authoritative classified position, same as it's been since Phase 0 (it's
+  never derived from `totalTimeMs`). If a penalty changes who finished
+  where, the admin still edits `position` by hand alongside adding the
+  penalty entry, the same way `pointsOverride` has always worked. Scoped
+  this way deliberately: auto-recalculating classification from a time
+  penalty is a much bigger, riskier feature (it would need to touch every
+  other row's gap/position too) than this chunk's actual ask.
+- **Editable only from `PublishedResultsEditor`, not the initial commit
+  flow.** Penalties are steward decisions made after reviewing an
+  incident, essentially always post-publish — so `SessionUploadPreview`'s
+  row shape is untouched, and `commitRowsSchema` doesn't gain a penalties
+  field. The editor's per-row "Penalties" toggle (same expandable-row
+  pattern as "History") lists existing entries with a remove link and a
+  small add form (reason + points); saving reuses the existing
+  `PATCH /api/results/[id]` endpoint and audit trail unchanged — penalties
+  is just one more field in the `previousValues`/`newValues` snapshot.
+- **Public visibility**: a session's results page (`/r/[slug]`) shows a
+  small "penalty" badge next to a driver's name when they have one or
+  more, with the reason and point value in a native title tooltip —
+  transparency matters for results, a penalty shouldn't be invisible on
+  the page people actually check.

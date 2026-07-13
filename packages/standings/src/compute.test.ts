@@ -19,6 +19,7 @@ function result(overrides: Partial<ResultForStandings> & { driverId: string }): 
     status: "finished",
     bestLapMs: null,
     pointsOverride: null,
+    penaltyPoints: 0,
     ...overrides,
   };
 }
@@ -141,6 +142,20 @@ describe("computeStandings", () => {
     expect(standings.find((s) => s.driverId === "alex")!.totalPoints).toBe(0);
     expect(standings.find((s) => s.driverId === "sam")!.totalPoints).toBe(-5);
     expect(standings.find((s) => s.driverId === "jordan")!.totalPoints).toBe(25);
+  });
+
+  it("applies penalty points on top of position-based or overridden points", () => {
+    const rounds = [
+      round("e1", 1, [
+        result({ driverId: "alex", position: 1, penaltyPoints: -5 }), // 25 - 5
+        result({ driverId: "sam", position: 3, pointsOverride: 10, penaltyPoints: -2 }), // 10 - 2
+      ]),
+    ];
+
+    const standings = computeStandings(rounds, SCHEME, CLASS_A);
+
+    expect(standings.find((s) => s.driverId === "alex")!.totalPoints).toBe(20);
+    expect(standings.find((s) => s.driverId === "sam")!.totalPoints).toBe(8);
   });
 
   it("only counts rounds a driver actually appears in", () => {
