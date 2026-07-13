@@ -1,15 +1,13 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { inputClass, buttonClass, labelClass } from "./form-styles";
 
-export function LoginForm() {
-  const router = useRouter();
+export function SignupForm() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [status, setStatus] = useState<"idle" | "submitting" | "error">("idle");
+  const [status, setStatus] = useState<"idle" | "submitting" | "sent" | "error">("idle");
   const [error, setError] = useState<string | null>(null);
 
   async function handleSubmit(e: React.FormEvent) {
@@ -17,7 +15,7 @@ export function LoginForm() {
     setStatus("submitting");
     setError(null);
 
-    const res = await fetch("/api/auth/login", {
+    const res = await fetch("/api/auth/signup", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ email, password }),
@@ -26,12 +24,19 @@ export function LoginForm() {
     if (!res.ok) {
       const data = await res.json().catch(() => null);
       setStatus("error");
-      setError(data?.error ?? "Could not sign in.");
+      setError(data?.error ?? "Could not create account.");
       return;
     }
 
-    router.push("/admin");
-    router.refresh();
+    setStatus("sent");
+  }
+
+  if (status === "sent") {
+    return (
+      <p className="text-sm text-zinc-600 dark:text-zinc-400">
+        Check your email for a link to confirm your account. It expires in 15 minutes.
+      </p>
+    );
   }
 
   return (
@@ -47,9 +52,10 @@ export function LoginForm() {
         />
       </label>
       <label className={labelClass}>
-        Password
+        Password (at least 8 characters)
         <input
           required
+          minLength={8}
           type="password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
@@ -58,16 +64,11 @@ export function LoginForm() {
       </label>
       {error && <p className="text-sm text-red-600">{error}</p>}
       <button type="submit" disabled={status === "submitting"} className={buttonClass}>
-        {status === "submitting" ? "Signing in…" : "Sign in"}
+        {status === "submitting" ? "Creating account…" : "Create account"}
       </button>
-      <div className="flex justify-between text-sm">
-        <Link href="/signup" className="underline">
-          Create an account
-        </Link>
-        <Link href="/forgot-password" className="underline">
-          Forgot password?
-        </Link>
-      </div>
+      <Link href="/login" className="text-sm underline">
+        Already have an account? Sign in
+      </Link>
     </form>
   );
 }

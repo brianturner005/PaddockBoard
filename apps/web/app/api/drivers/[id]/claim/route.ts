@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { eq } from "drizzle-orm";
-import { requestLinkSchema } from "@paddockboard/shared";
+import { emailOnlySchema } from "@paddockboard/shared";
 import { db } from "@paddockboard/db";
 import { drivers } from "@paddockboard/db/schema";
 import { createDriverClaimToken } from "@/lib/auth";
@@ -10,7 +10,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
   const { id } = await params;
 
   const body = await request.json().catch(() => null);
-  const parsed = requestLinkSchema.safeParse(body);
+  const parsed = emailOnlySchema.safeParse(body);
   if (!parsed.success) {
     return NextResponse.json({ error: "Invalid email" }, { status: 400 });
   }

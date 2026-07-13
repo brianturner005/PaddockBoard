@@ -115,12 +115,22 @@ Progress:
   confirm-email click required before it's live) and a one-click
   unsubscribe link in every notification
 
-**Phase 8 (export) in progress.**
+**Phase 8 (export) complete.**
 
 - [x] Standings & results export — a "Download CSV" link on
   `/standings/[classId]` and `/r/[slug]` exports the same data shown on
   the page; a "Print" button plus a print stylesheet turns either page
   into a clean, legible printout for trophy banquets and handouts
+
+**Phase 9 (email + password auth) in progress.**
+
+- [x] Replaced magic-link sign-in with email + password. Signup requires
+  confirming your email once (a link, same as before) before the account
+  is created; every login after that is just email + password, no more
+  waiting on an email each time. Forgot-password works the same way for
+  existing accounts (which don't have a password yet) as for a genuinely
+  forgotten one — **if you signed in before this shipped, use "Forgot
+  password" once to set yours**
 
 ## Stack
 
@@ -128,7 +138,8 @@ Progress:
   handlers under `app/api/*` are a thin persistence layer only
 - **Database**: Neon (serverless Postgres) via Drizzle ORM
 - **File storage**: Vercel Blob (original timing exports, stored before parsing)
-- **Auth**: email magic-link (Resend for delivery)
+- **Auth**: email + password, with email confirmation on signup and
+  password reset (Resend for delivery)
 - **Parsing & standings**: pure TypeScript functions, run client-side, unit-tested with Vitest
 - **Testing**: Vitest across all workspaces
 - **CI**: GitHub Actions (lint, typecheck, test, build on every PR)
@@ -174,16 +185,20 @@ npm run db:migrate    # apply pending migrations to DATABASE_URL
 
 ### Auth
 
-Club admin sign-in is a real email magic-link flow (not stubbed), so
-`apps/web/.env.local` also needs:
+Club admin sign-in is email + password (not stubbed) — signup confirmation,
+password reset, driver-claim, and subscription-confirm emails all go
+through Resend, so `apps/web/.env.local` also needs:
 
-- `AUTH_SECRET` — random signing secret for the magic-link and session
-  JWTs. Generate with
+- `AUTH_SECRET` — random signing secret for the short-lived confirm/reset
+  tokens and the session JWT. Generate with
   `node -e "console.log(require('crypto').randomBytes(32).toString('base64url'))"`.
 - `RESEND_API_KEY` — from [resend.com](https://resend.com), required to
-  actually send the sign-in email.
+  actually send any of the emails above.
 - `EMAIL_FROM` — sender address; `onboarding@resend.dev` works until a
   custom domain is verified in Resend.
+
+Signed in before this shipped? Your account doesn't have a password yet —
+use "Forgot password" on the login page once to set one.
 - `APP_URL` — base URL used to build the callback link in the email
   (`http://localhost:3000` locally).
 

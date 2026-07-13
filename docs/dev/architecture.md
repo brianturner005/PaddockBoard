@@ -666,3 +666,67 @@ new ways to read what already exists.
   dark-mode-colored, i.e. often near-white text on white paper. Losing the
   accent/podium colors on a printed handout is an acceptable trade for
   guaranteed legibility.
+
+# Phase 9
+
+## Email + password authentication (replacing magic link)
+
+Magic-link sign-in (real since chunk 3) was replaced at the user's request
+— needing an email round-trip on *every* login was the specific friction,
+not the concept of email-based verification generally, which is why
+verification stays part of signup and password recovery, just not routine
+login.
+
+- **`users.password_hash`** is nullable, not backfilled. Every user row
+  created before this chunk (magic-link era) or created by
+  `findOrCreateUserByEmail` (club-member invites, driver claiming) has no
+  password yet. `POST /api/auth/login` returns a distinct message for that
+  case ("this account doesn't have a password set yet — use forgot
+  password") rather than the generic invalid-credentials message, so
+  existing users have a clear path forward instead of looking locked out.
+  This does mean the login endpoint reveals "this email exists but has no
+  password" as distinct from "wrong password" — a narrow enumeration
+  surface judged acceptable for a low-stakes results site, same risk
+  tolerance already reflected in e.g. magic-link's no-storage replay
+  protection being expiry-only.
+- **scrypt via Node's built-in `crypto`, not a third-party hashing
+  library.** `hashPassword`/`verifyPassword` in `lib/auth.ts` use
+  `crypto.scrypt` + a random salt, stored as `salt:hex`, compared with
+  `timingSafeEqual`. Zero new dependencies, consistent with this project's
+  running preference for built-ins over packages where they're adequate
+  (same reasoning that kept `iconv-lite` out of the CSV parser).
+- **Signup requires confirming the email before anything is written to
+  the `users` table — this is the one deliberately-added friction point,
+  and it's load-bearing, not decorative.** The password hash travels
+  inside the signed confirm-signup JWT itself
+  (`createSignupConfirmToken(email, passwordHash)`); `GET
+  /api/auth/confirm-signup` is what actually creates-or-updates the user
+  row and signs them in. Skipping this and writing the password straight
+  to the row at signup time would let anyone claim an *existing*
+  passwordless row — e.g. a club owner who was invited by email but never
+  logged in yet — just by submitting that email address in the signup
+  form, with no proof they control the inbox. That's a real account-
+  takeover path for exactly the accounts that matter most (existing club
+  admins), not a hypothetical; closing it is why signup, uniquely among
+  the four flows here, doesn't create a session immediately. Login itself
+  has no such step — it only ever reads a password hash that was already
+  proven, never writes one.
+- **Password reset mirrors signup's trust model but the other direction**:
+  `POST /api/auth/forgot-password` always responds `{ ok: true }` whether
+  or not the email is registered (no enumeration), and only writes the new
+  password hash after `GET`-equivalent `POST /api/auth/reset-password`
+  verifies the emailed token. This is also how an existing passwordless
+  account (invite/claim/pre-Phase-9) sets its first real password — same
+  endpoint, no separate "set initial password" flow needed.
+- **Driver claiming (`createDriverClaimToken`/`verifyDriverClaimToken`) is
+  untouched** — it's a rare, one-time action per driver profile, not
+  routine login, so the friction the user objected to doesn't apply there,
+  and there's no reason to make it password-based.
+- **No rate limiting on login/signup/reset attempts** — same category of
+  acknowledged, deliberate gap as the rest of this app's auth (no request
+  throttling infra exists yet, e.g. Redis/Upstash); worth revisiting if
+  the app ever handles real financial or personally sensitive data instead
+  of race results.
+- Existing accounts (everyone who signed in before this chunk shipped)
+  have no password yet and need to run the forgot-password flow once to
+  set one.
