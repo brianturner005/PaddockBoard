@@ -7,3 +7,10 @@ export const createSeasonSchema = z.object({
 });
 
 export type CreateSeasonInput = z.infer<typeof createSeasonSchema>;
+
+export const updateSeasonSchema = z.object({
+  name: z.string().trim().min(2).max(200),
+  year: z.number().int().min(1990).max(2100),
+});
+
+export type UpdateSeasonInput = z.infer<typeof updateSeasonSchema>;

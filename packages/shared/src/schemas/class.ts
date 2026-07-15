@@ -6,3 +6,9 @@ export const createClassSchema = z.object({
 });
 
 export type CreateClassInput = z.infer<typeof createClassSchema>;
+
+export const updateClassSchema = z.object({
+  name: z.string().trim().min(1).max(200),
+});
+
+export type UpdateClassInput = z.infer<typeof updateClassSchema>;

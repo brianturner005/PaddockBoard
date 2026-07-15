@@ -730,3 +730,62 @@ login.
 - Existing accounts (everyone who signed in before this chunk shipped)
   have no password yet and need to run the forgot-password flow once to
   set one.
+
+# Phase 10
+
+## Edit support for admin entities
+
+Every admin page only ever had create forms — clubs, seasons, classes,
+events, and sessions could be created but never renamed or corrected, so a
+typo (a common outcome of volunteer data entry under time pressure at a
+track) was permanent short of a manual SQL fix. This chunk adds `PATCH`
+endpoints and inline edit UI for all five entity types. Deliberately
+scoped to renaming/correcting fields already set at creation time — it
+does **not** add delete (a separate, riskier chunk given cascading FKs
+across ~10 dependent tables, all currently `no action`) and does not let a
+class's `pointsSchemeId` or a session's `source` change after creation,
+since both drive assumptions made elsewhere (a scheme swap would need to
+explain itself against already-computed standings; changing `source`
+would orphan whatever upload/parse UI the session was already built
+around).
+
+- **New Zod schemas** (`updateClubSchema`, `updateSeasonSchema`,
+  `updateClassSchema`, `updateEventSchema`, `updateSessionSchema` in
+  `packages/shared`) mirror their `create*` counterparts minus the
+  parent-id field, which never changes on edit (moving a season to a
+  different club, for instance, is out of scope — that's a data-model
+  question, not a typo fix).
+- **`updateEventSchema` uses `.nullable()`, not `.optional()`, for `venue`
+  and `roundNumber`.** Optional-and-omitted and explicitly-null mean
+  different things to Drizzle's `.update().set()` — an omitted key is
+  skipped entirely (column untouched) while an explicit `null` clears it.
+  Since the edit form needs to support *removing* a previously-set venue
+  or round number (not just adding one, which is all `create` needs),
+  the client always sends the key with either a value or `null`.
+- **`updateSessionSchema` folds into the existing `PATCH
+  /api/sessions/[id]`** (previously only handled the
+  `CountsForStandingsToggle`) rather than adding a second endpoint — all
+  fields (`name`, `type`, `countsForStandings`) are optional and the route
+  builds a partial `.set()` object from whichever keys are present, so the
+  standings-toggle checkbox and the new name/type edit form can both PATCH
+  the same session independently without stepping on each other.
+- **Club slug is intentionally not editable here.** The slug is baked into
+  every public URL (`/c/[slug]`, and historically `/r/[slug]` sessions
+  reference it indirectly through the club page) — renaming a club updates
+  its display name only, never `clubs.slug`, so existing shared links keep
+  resolving. A slug-change flow, if ever wanted, is a distinct feature
+  (with redirect-preservation concerns) and not part of this chunk.
+- **`getClassWithClub` added to `lib/ownership.ts`** — classes didn't
+  previously need an ownership-chain lookup of their own (they were only
+  ever created via their parent season's known club), but editing a class
+  by its own id needs to walk class → season → club to authorize.
+- **UI placement matches each entity's existing navigation shape.**
+  Clubs, seasons, events, and sessions each already have their own admin
+  detail page, so their edit form replaces the static header (name serves
+  as both the display and, once "Edit" is clicked, the trigger for an
+  inline form that collapses back on save/cancel) — the same interaction
+  the points-scheme page already used for "Edit points scheme," just
+  inlined instead of linking out. Classes have no detail page of their
+  own (they're only ever shown as rows in a season's class list, linking
+  out to the public standings page), so `ClassListItem` brings the same
+  inline-edit toggle to the row itself instead.

@@ -122,7 +122,7 @@ Progress:
   the page; a "Print" button plus a print stylesheet turns either page
   into a clean, legible printout for trophy banquets and handouts
 
-**Phase 9 (email + password auth) in progress.**
+**Phase 9 (email + password auth) complete.**
 
 - [x] Replaced magic-link sign-in with email + password. Signup requires
   confirming your email once (a link, same as before) before the account
@@ -131,6 +131,14 @@ Progress:
   existing accounts (which don't have a password yet) as for a genuinely
   forgotten one — **if you signed in before this shipped, use "Forgot
   password" once to set yours**
+
+**Phase 10 (edit support for admin entities) in progress.**
+
+- [x] Edit/rename for clubs, seasons, classes, events, and sessions —
+  every admin detail page now has an inline "Edit" toggle next to its
+  header (classes, which have no detail page of their own, get it on
+  their row in the season's class list instead). Delete is intentionally
+  not part of this chunk — see architecture notes
 
 ## Stack
 

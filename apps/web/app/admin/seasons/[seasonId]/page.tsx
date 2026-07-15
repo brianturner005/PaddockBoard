@@ -8,6 +8,8 @@ import { getSeasonWithClub, hasClubAccess } from "@/lib/ownership";
 import { CreateClassForm } from "@/components/CreateClassForm";
 import { CreateEventForm } from "@/components/CreateEventForm";
 import { SectionCard } from "@/components/SectionCard";
+import { EditSeasonForm } from "@/components/EditSeasonForm";
+import { ClassListItem } from "@/components/ClassListItem";
 
 export default async function SeasonPage({ params }: { params: Promise<{ seasonId: string }> }) {
   const { seasonId } = await params;
@@ -31,23 +33,18 @@ export default async function SeasonPage({ params }: { params: Promise<{ seasonI
         <Link href={`/admin/clubs/${club.id}`} className="text-sm underline">
           ← {club.name}
         </Link>
-        <h1 className="mt-2 text-xl font-semibold text-black dark:text-zinc-50">
-          {season.name} ({season.year})
-        </h1>
+        <div className="mt-2">
+          <EditSeasonForm season={season} />
+        </div>
       </div>
 
       <SectionCard title="Classes">
         {seasonClasses.length === 0 ? (
           <p className="text-sm text-zinc-600 dark:text-zinc-400">No classes yet.</p>
         ) : (
-          <ul className="-mx-2 mb-4 flex flex-col divide-y divide-zinc-100 text-sm text-zinc-800 dark:divide-zinc-800/60 dark:text-zinc-200">
+          <ul className="-mx-2 mb-4 flex flex-col divide-y divide-zinc-100 dark:divide-zinc-800/60">
             {seasonClasses.map((cls) => (
-              <li key={cls.id} className="flex items-center justify-between gap-2 px-2 py-2">
-                {cls.name}
-                <Link href={`/standings/${cls.id}`} className="underline" target="_blank" rel="noopener noreferrer">
-                  standings
-                </Link>
-              </li>
+              <ClassListItem key={cls.id} cls={cls} />
             ))}
           </ul>
         )}
