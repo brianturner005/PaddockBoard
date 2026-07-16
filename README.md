@@ -147,6 +147,14 @@ Progress:
   match their edit form's any-member bar. See architecture notes for how
   the cascade stays safe without database transactions
 
+**Phase 11 (account) in progress.**
+
+- [x] Account page + change password — click your email in the admin
+  header to reach `/admin/account`: set your name (now also shown next to
+  your email in a club's member list) and change your password without
+  logging out. Accounts with no password yet (invited members, claimed
+  drivers who never logged in) get pointed at "Forgot password" instead
+
 ## Stack
 
 - **Frontend + API**: Next.js (App Router) on Vercel — a single app; route

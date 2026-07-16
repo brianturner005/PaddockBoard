@@ -7,6 +7,7 @@ interface Member {
   id: string;
   userId: string;
   email: string;
+  name: string | null;
   role: "owner" | "editor";
 }
 
@@ -67,7 +68,8 @@ export function ClubMembersPanel({ clubId, isOwner, currentUserId }: { clubId: s
           {members.map((member) => (
             <li key={member.id} className="flex items-center justify-between gap-2 px-2 py-2">
               <span>
-                {member.email} <span className="text-zinc-500 dark:text-zinc-400">({member.role})</span>
+                {member.name ? `${member.name} (${member.email})` : member.email}{" "}
+                <span className="text-zinc-500 dark:text-zinc-400">({member.role})</span>
                 {member.userId === currentUserId && " — you"}
               </span>
               {isOwner && (

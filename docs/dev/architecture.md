@@ -838,3 +838,33 @@ delete path anywhere in the app before this.
 - **Club slug, again, is a non-issue here** — deleting is absolute (the
   slug goes with everything else), so there's no separate "what happens
   to the URL" question the way there was for editing a club's name.
+
+# Phase 11
+
+## Account/profile page + change password
+
+`users.name` has existed since the schema's first draft but nothing ever
+set or displayed it, and the only way to change a password (Phase 9) was
+to log out and run forgot-password — workable but backwards for the
+common case of an admin who just wants a different password while
+already signed in.
+
+- **`/admin/account`**, reachable by clicking the email in the admin
+  header (previously plain text, now a link) — reuses the existing admin
+  layout/auth-gate rather than inventing a parallel one.
+- **`PATCH /api/account`** sets `name`. **`POST /api/account/password`**
+  changes the password, requiring the *current* password (verified via
+  the same `verifyPassword` login already uses) rather than trusting the
+  session alone — a stolen/left-open session shouldn't be enough on its
+  own to lock the real owner out by rotating their password.
+- **Accounts with no password yet** (an invited club member or claimed
+  driver who never logged in, or a pre-Phase-9 holdout) can't "change" a
+  password that doesn't exist — `POST /api/account/password` returns a
+  clear error pointing at forgot-password instead of a confusing
+  "incorrect password," and `ChangePasswordForm` checks this server-side
+  fact up front so the form doesn't even render for that case.
+- **`name` also now shows up in the club members list** (`Jane Doe
+  (jane@example.com)` instead of just the email) wherever it's set — the
+  only other place in the app a fellow club member is ever identified, so
+  this is where setting a name actually pays off for someone other than
+  yourself.
