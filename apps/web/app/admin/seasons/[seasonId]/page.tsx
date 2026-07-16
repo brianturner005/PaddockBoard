@@ -34,7 +34,7 @@ export default async function SeasonPage({ params }: { params: Promise<{ seasonI
           ← {club.name}
         </Link>
         <div className="mt-2">
-          <EditSeasonForm season={season} />
+          <EditSeasonForm season={season} clubId={club.id} />
         </div>
       </div>
 

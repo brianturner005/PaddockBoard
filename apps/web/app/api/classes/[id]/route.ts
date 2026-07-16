@@ -5,6 +5,7 @@ import { db } from "@paddockboard/db";
 import { classes } from "@paddockboard/db/schema";
 import { getCurrentUser } from "@/lib/auth";
 import { getClassWithClub, hasClubAccess } from "@/lib/ownership";
+import { getClassDeleteImpact, executeClassDelete } from "@/lib/cascade-delete";
 
 export async function PATCH(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -32,4 +33,27 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
     .returning();
 
   return NextResponse.json({ class: updated });
+}
+
+export async function DELETE(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
+
+  const user = await getCurrentUser();
+  if (!user) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  const result = await getClassWithClub(id);
+  if (!result || !(await hasClubAccess(result.club.id, user.id))) {
+    return NextResponse.json({ error: "Not found" }, { status: 404 });
+  }
+
+  const confirmed = request.nextUrl.searchParams.get("confirm") === "true";
+  if (!confirmed) {
+    const impact = await getClassDeleteImpact(id);
+    return NextResponse.json({ requiresConfirmation: true, impact });
+  }
+
+  await executeClassDelete(id);
+  return NextResponse.json({ deleted: true });
 }

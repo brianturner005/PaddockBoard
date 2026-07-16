@@ -5,6 +5,7 @@ import { db } from "@paddockboard/db";
 import { sessions, results, drivers } from "@paddockboard/db/schema";
 import { getCurrentUser } from "@/lib/auth";
 import { getSessionWithClub, hasClubAccess } from "@/lib/ownership";
+import { getSessionDeleteImpact, executeSessionDelete } from "@/lib/cascade-delete";
 
 export async function GET(_request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -71,4 +72,27 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
   const [session] = await db.update(sessions).set(updates).where(eq(sessions.id, id)).returning();
 
   return NextResponse.json({ session });
+}
+
+export async function DELETE(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
+
+  const user = await getCurrentUser();
+  if (!user) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  const result = await getSessionWithClub(id);
+  if (!result || !(await hasClubAccess(result.club.id, user.id))) {
+    return NextResponse.json({ error: "Not found" }, { status: 404 });
+  }
+
+  const confirmed = request.nextUrl.searchParams.get("confirm") === "true";
+  if (!confirmed) {
+    const impact = await getSessionDeleteImpact(id);
+    return NextResponse.json({ requiresConfirmation: true, impact });
+  }
+
+  await executeSessionDelete(id);
+  return NextResponse.json({ deleted: true });
 }

@@ -3,8 +3,15 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { inputClass, buttonClass, labelClass } from "./form-styles";
+import { DeleteButton } from "./DeleteButton";
 
-export function EditClubForm({ club }: { club: { id: string; name: string; slug: string; timezone: string } }) {
+export function EditClubForm({
+  club,
+  isOwner,
+}: {
+  club: { id: string; name: string; slug: string; timezone: string };
+  isOwner: boolean;
+}) {
   const router = useRouter();
   const [editing, setEditing] = useState(false);
   const [name, setName] = useState(club.name);
@@ -24,6 +31,13 @@ export function EditClubForm({ club }: { club: { id: string; name: string; slug:
           >
             Edit
           </button>
+          {isOwner && (
+            <DeleteButton
+              endpoint={`/api/clubs/${club.id}`}
+              entityLabel="club"
+              onDeleted={() => router.push("/admin")}
+            />
+          )}
         </div>
         <p className="text-sm text-zinc-600 dark:text-zinc-400">/{club.slug}</p>
       </div>

@@ -3,11 +3,14 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { inputClass, buttonClass, labelClass } from "./form-styles";
+import { DeleteButton } from "./DeleteButton";
 
 export function EditEventForm({
   event,
+  seasonId,
 }: {
   event: { id: string; name: string; venue: string | null; eventDate: string; roundNumber: number | null };
+  seasonId: string;
 }) {
   const router = useRouter();
   const [editing, setEditing] = useState(false);
@@ -35,6 +38,11 @@ export function EditEventForm({
         >
           Edit
         </button>
+        <DeleteButton
+          endpoint={`/api/events/${event.id}`}
+          entityLabel="event"
+          onDeleted={() => router.push(`/admin/seasons/${seasonId}`)}
+        />
       </div>
     );
   }
