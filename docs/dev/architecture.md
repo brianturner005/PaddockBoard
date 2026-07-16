@@ -789,3 +789,52 @@ around).
   own (they're only ever shown as rows in a season's class list, linking
   out to the public standings page), so `ClassListItem` brings the same
   inline-edit toggle to the row itself instead.
+
+## Delete support for admin entities
+
+The harder half of the same chunk. Every FK in `db/schema.ts` is `no
+action` (deliberate since Phase 0 — see the schema's own comments), so
+Postgres itself refuses any delete that would orphan a row; there was no
+delete path anywhere in the app before this.
+
+- **`lib/cascade-delete.ts` computes an explicit "plan" (id lists) for
+  everything underneath the entity being deleted, then reuses that plan
+  for two different things**: an impact summary (`getXDeleteImpact`) and
+  the actual cascade (`executeXDelete`). This means the confirmation UI
+  the admin sees is never a guess or an approximation — it's the literal
+  set of rows about to disappear, computed the same way the delete itself
+  will compute it.
+- **Deletes run leaf-first**: audit trail (`result_edits`) → `results` →
+  `sessions`/`classes`/subscriptions → `events` → `seasons` →
+  `points_schemes`/`drivers`/`club_members` → the entity itself. Given
+  `neon-http` has no transaction support (the same constraint noted
+  against `result_edits` back in Phase 1), a cascade interrupted partway
+  through (a crashed request, a timeout) always leaves a *smaller but
+  still internally consistent* tree — never a row pointing at something
+  that no longer exists. Re-clicking delete on the same entity picks up
+  wherever it left off, since every step is naturally idempotent (deleting
+  rows that are already gone deletes zero rows, not an error).
+- **Deleting a class deletes its results, even ones on sessions shared
+  with other classes.** `results.classId` is `not null`, so a class with
+  any race data can't be removed without also removing the results rows
+  tagged with it — this is unavoidable given multi-class sessions
+  (Phase 3) let one session hold rows from several classes at once. The
+  impact preview surfaces the real result count before the admin commits,
+  so this is a disclosed trade-off, not a silent one.
+- **Two-request confirm flow, no new endpoint.** `DELETE
+  /api/<entity>/[id]` without `?confirm=true` computes and returns the
+  impact summary but changes nothing; the client's `DeleteButton` shows
+  that summary in a native `confirm()` dialog, and only re-issues the
+  request with `?confirm=true` if the admin accepts. A single endpoint
+  doing double duty (preview vs. execute, gated by a query param) avoids
+  a parallel `GET .../delete-preview` route that would need to be kept in
+  sync with the real cascade's traversal logic by hand.
+- **Deleting a club is gated to owners, not any member** — the one
+  asymmetry versus edit (any member can rename/correct anything). Losing
+  an entire club's history is qualitatively different from a typo fix,
+  and mirrors the existing owner-only gate on club member management.
+  Season/class/event/session delete stay at the same "any member" bar as
+  their edit forms.
+- **Club slug, again, is a non-issue here** — deleting is absolute (the
+  slug goes with everything else), so there's no separate "what happens
+  to the URL" question the way there was for editing a club's name.

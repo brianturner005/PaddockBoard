@@ -38,7 +38,7 @@ export default async function SessionUploadPage({
           ← {event.name}
         </Link>
         <div className="mt-2">
-          <EditSessionForm session={session} />
+          <EditSessionForm session={session} eventId={event.id} />
         </div>
         <div className="mt-1 flex items-center gap-2 text-sm text-zinc-600 dark:text-zinc-400">
           <span

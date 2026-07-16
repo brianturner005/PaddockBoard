@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { inputClass, buttonClass, labelClass } from "./form-styles";
+import { DeleteButton } from "./DeleteButton";
 
 export function ClassListItem({ cls }: { cls: { id: string; name: string } }) {
   const router = useRouter();
@@ -76,6 +77,7 @@ export function ClassListItem({ cls }: { cls: { id: string; name: string } }) {
         >
           Edit
         </button>
+        <DeleteButton endpoint={`/api/classes/${cls.id}`} entityLabel="class" onDeleted={() => router.refresh()} />
       </span>
     </li>
   );

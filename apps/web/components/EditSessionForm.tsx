@@ -4,13 +4,16 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { sessionTypeSchema } from "@paddockboard/shared";
 import { inputClass, buttonClass, labelClass } from "./form-styles";
+import { DeleteButton } from "./DeleteButton";
 
 const SESSION_TYPES = sessionTypeSchema.options;
 
 export function EditSessionForm({
   session,
+  eventId,
 }: {
   session: { id: string; name: string; type: (typeof SESSION_TYPES)[number] };
+  eventId: string;
 }) {
   const router = useRouter();
   const [editing, setEditing] = useState(false);
@@ -32,6 +35,11 @@ export function EditSessionForm({
         >
           Edit
         </button>
+        <DeleteButton
+          endpoint={`/api/sessions/${session.id}`}
+          entityLabel="session"
+          onDeleted={() => router.push(`/admin/events/${eventId}`)}
+        />
       </div>
     );
   }

@@ -30,7 +30,7 @@ export default async function ClubPage({ params }: { params: Promise<{ clubId: s
           ← Your clubs
         </Link>
         <div className="mt-2">
-          <EditClubForm club={club} />
+          <EditClubForm club={club} isOwner={membership.role === "owner"} />
         </div>
         <Link href={`/admin/clubs/${club.id}/points-scheme`} className="mt-1 inline-block text-sm underline">
           Edit points scheme

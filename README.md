@@ -132,13 +132,20 @@ Progress:
   forgotten one — **if you signed in before this shipped, use "Forgot
   password" once to set yours**
 
-**Phase 10 (edit support for admin entities) in progress.**
+**Phase 10 (edit + delete support for admin entities) in progress.**
 
 - [x] Edit/rename for clubs, seasons, classes, events, and sessions —
   every admin detail page now has an inline "Edit" toggle next to its
   header (classes, which have no detail page of their own, get it on
-  their row in the season's class list instead). Delete is intentionally
-  not part of this chunk — see architecture notes
+  their row in the season's class list instead).
+- [x] Delete for clubs, seasons, classes, events, and sessions — the same
+  "Edit" row now has a "Delete" action too. Deleting anything with
+  children (a season's classes/events, a club's whole history) cascades
+  all the way down, and always shows a real count of what's about to go
+  ("this also permanently deletes 3 events, 12 sessions, 140 results")
+  before asking for confirmation. Deleting a club is owner-only; the rest
+  match their edit form's any-member bar. See architecture notes for how
+  the cascade stays safe without database transactions
 
 ## Stack
 

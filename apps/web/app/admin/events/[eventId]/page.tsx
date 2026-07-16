@@ -29,7 +29,7 @@ export default async function EventPage({ params }: { params: Promise<{ eventId:
           ← {season.name}
         </Link>
         <div className="mt-2">
-          <EditEventForm event={event} />
+          <EditEventForm event={event} seasonId={season.id} />
         </div>
       </div>
 
