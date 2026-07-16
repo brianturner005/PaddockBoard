@@ -9,6 +9,7 @@ import { SessionUploadPreview } from "@/components/SessionUploadPreview";
 import { CountsForStandingsToggle } from "@/components/CountsForStandingsToggle";
 import { PublishedResultsEditor } from "@/components/PublishedResultsEditor";
 import { SectionCard } from "@/components/SectionCard";
+import { EditSessionForm } from "@/components/EditSessionForm";
 
 export default async function SessionUploadPage({
   params,
@@ -36,9 +37,10 @@ export default async function SessionUploadPage({
         <Link href={`/admin/events/${event.id}`} className="text-sm underline">
           ← {event.name}
         </Link>
-        <h1 className="mt-2 text-xl font-semibold text-black dark:text-zinc-50">{session.name}</h1>
+        <div className="mt-2">
+          <EditSessionForm session={session} />
+        </div>
         <div className="mt-1 flex items-center gap-2 text-sm text-zinc-600 dark:text-zinc-400">
-          <span>{session.type}</span>
           <span
             className={
               session.status === "published"

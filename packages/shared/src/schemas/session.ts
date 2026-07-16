@@ -12,3 +12,13 @@ export const createSessionSchema = z.object({
 });
 
 export type CreateSessionInput = z.infer<typeof createSessionSchema>;
+
+export const updateSessionSchema = z
+  .object({
+    name: z.string().trim().min(2).max(200).optional(),
+    type: sessionTypeSchema.optional(),
+    countsForStandings: z.boolean().optional(),
+  })
+  .refine((data) => Object.keys(data).length > 0, "No fields to update");
+
+export type UpdateSessionInput = z.infer<typeof updateSessionSchema>;

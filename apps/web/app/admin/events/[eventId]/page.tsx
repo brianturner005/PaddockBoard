@@ -7,6 +7,7 @@ import { getCurrentUser } from "@/lib/auth";
 import { getEventWithClub, hasClubAccess } from "@/lib/ownership";
 import { CreateSessionForm } from "@/components/CreateSessionForm";
 import { SectionCard } from "@/components/SectionCard";
+import { EditEventForm } from "@/components/EditEventForm";
 
 export default async function EventPage({ params }: { params: Promise<{ eventId: string }> }) {
   const { eventId } = await params;
@@ -27,11 +28,9 @@ export default async function EventPage({ params }: { params: Promise<{ eventId:
         <Link href={`/admin/seasons/${season.id}`} className="text-sm underline">
           ← {season.name}
         </Link>
-        <h1 className="mt-2 text-xl font-semibold text-black dark:text-zinc-50">{event.name}</h1>
-        <p className="text-sm text-zinc-600 dark:text-zinc-400">
-          {event.venue ? `${event.venue} · ` : ""}
-          {event.eventDate}
-        </p>
+        <div className="mt-2">
+          <EditEventForm event={event} />
+        </div>
       </div>
 
       <SectionCard title="Sessions">

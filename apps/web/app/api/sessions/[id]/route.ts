@@ -1,14 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
-import { z } from "zod";
 import { eq } from "drizzle-orm";
+import { updateSessionSchema } from "@paddockboard/shared";
 import { db } from "@paddockboard/db";
 import { sessions, results, drivers } from "@paddockboard/db/schema";
 import { getCurrentUser } from "@/lib/auth";
 import { getSessionWithClub, hasClubAccess } from "@/lib/ownership";
-
-const patchSessionSchema = z.object({
-  countsForStandings: z.boolean(),
-});
 
 export async function GET(_request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -60,16 +56,19 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
   }
 
   const body = await request.json().catch(() => null);
-  const parsed = patchSessionSchema.safeParse(body);
+  const parsed = updateSessionSchema.safeParse(body);
   if (!parsed.success) {
     return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 });
   }
 
-  const [session] = await db
-    .update(sessions)
-    .set({ countsForStandings: parsed.data.countsForStandings })
-    .where(eq(sessions.id, id))
-    .returning();
+  const updates: Partial<typeof sessions.$inferInsert> = {};
+  if (parsed.data.name !== undefined) updates.name = parsed.data.name;
+  if (parsed.data.type !== undefined) updates.type = parsed.data.type;
+  if (parsed.data.countsForStandings !== undefined) {
+    updates.countsForStandings = parsed.data.countsForStandings;
+  }
+
+  const [session] = await db.update(sessions).set(updates).where(eq(sessions.id, id)).returning();
 
   return NextResponse.json({ session });
 }
