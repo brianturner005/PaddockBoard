@@ -20,7 +20,13 @@ export async function GET(_request: NextRequest, { params }: { params: Promise<{
   }
 
   const members = await db
-    .select({ id: clubMembers.id, userId: clubMembers.userId, email: users.email, role: clubMembers.role })
+    .select({
+      id: clubMembers.id,
+      userId: clubMembers.userId,
+      email: users.email,
+      name: users.name,
+      role: clubMembers.role,
+    })
     .from(clubMembers)
     .innerJoin(users, eq(clubMembers.userId, users.id))
     .where(eq(clubMembers.clubId, id));

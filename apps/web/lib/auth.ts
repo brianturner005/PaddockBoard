@@ -159,6 +159,11 @@ export async function findUserByEmail(email: string) {
   return rows[0] ?? null;
 }
 
+export async function findUserById(id: string) {
+  const rows = await db.select().from(users).where(eq(users.id, id)).limit(1);
+  return rows[0] ?? null;
+}
+
 // Still used by club-member invites and driver claiming, both of which
 // need a users row to exist (or get created) without requiring a
 // password -- password only gets set the first time that person signs up

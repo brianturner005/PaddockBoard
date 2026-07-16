@@ -19,7 +19,9 @@ export default async function AdminLayout({ children }: { children: React.ReactN
           PaddockBoard
         </Link>
         <div className="flex items-center gap-4 text-sm text-zinc-600 dark:text-zinc-400">
-          <span>{user.email}</span>
+          <Link href="/admin/account" className="underline">
+            {user.email}
+          </Link>
           <form action="/api/auth/logout" method="post">
             <button type="submit" className="underline">
               Sign out
